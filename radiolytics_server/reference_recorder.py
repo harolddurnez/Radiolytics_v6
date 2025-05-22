@@ -10,6 +10,7 @@ import logging
 from datetime import datetime
 import threading
 from collections import deque
+from dotenv import load_dotenv
 
 # --- CONFIGURATION ---
 RECORDING_INTERVAL = 10  # seconds
@@ -31,11 +32,17 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # --- FIREBASE SETUP ---
-cred = credentials.Certificate("service-account.json")
+load_dotenv()
+
+cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+cred = credentials.Certificate(cred_path)
 firebase_admin.initialize_app(cred, {
     'storageBucket': 'newbuckettest.firebasestorage.app'
 })
 bucket = storage.bucket()
+
+# Update all local fingerprint file output to use FINGERPRINT_OUTPUT_PATH from .env
+FINGERPRINT_OUTPUT_PATH = os.getenv("FINGERPRINT_OUTPUT_PATH", "ADMIN DO NOT COMMIT/fingerprints/")
 
 class RadioStreamRecorder:
     def __init__(self, stream_url, station_name, headers=None):
@@ -220,12 +227,12 @@ class RadioStreamRecorder:
             logger.info(f"Saved fingerprint for {self.station_name} at {timestamp} - Public URL: {blob.public_url}")
             
             # Also save locally
-            local_dir = os.path.join('Fingerprints', 'local_reference_fingerprints')
+            local_dir = FINGERPRINT_OUTPUT_PATH
             os.makedirs(local_dir, exist_ok=True)
             local_path = os.path.join(local_dir, f"{timestamp}_{self.station_name}.json")
             with open(local_path, 'w') as f:
-                f.write(json_data)
-            logger.info(f"Saved fingerprint locally at {local_path}")
+                json.dump({"fingerprint": fingerprint, "timestamp": timestamp, "station": self.station_name}, f)
+            logger.info(f"Saved reference fingerprint locally at {local_path}")
             
             # Clean up old fingerprints
             self._cleanup_old_fingerprints()

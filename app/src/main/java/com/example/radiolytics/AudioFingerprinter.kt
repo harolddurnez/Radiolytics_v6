@@ -94,13 +94,19 @@ class AudioFingerprinter {
         val freqs = DoubleArray(FRAME_SIZE / 2) { it * SAMPLE_RATE.toDouble() / FRAME_SIZE }
         val magSum = magnitudes.sum().takeIf { it > 0 } ?: 1.0
         val centroid = (freqs.zip(magnitudes).sumOf { it.first * it.second } / magSum).toFloat()
-        // Normalize features
+        
+        // Calculate dB level (same as Python backend)
+        val db = 20 * kotlin.math.log10(rms + 1e-10)
+        latestDb = db // Store for monitoring
+        
+        // Normalize features to match Python backend
         val normRms = rms // Already in [0,1] for audio
-        val normCentroid = centroid / (SAMPLE_RATE / 2f) // Nyquist
+        val normCentroid = centroid / (SAMPLE_RATE / 2f) // Normalize by Nyquist frequency
         val normEnergy = energy / FRAME_SIZE // Normalize by frame size
-        fingerprint.add(floatArrayOf(normRms, normCentroid, normEnergy))
-        // dB for monitoring
-        latestDb = 20 * kotlin.math.log10(rms + 1e-10)
+        val normDb = db.toFloat() // Keep dB as is, matching Python backend
+        
+        // Add 4D vector to fingerprint
+        fingerprint.add(floatArrayOf(normRms, normCentroid, normEnergy, normDb))
         return true
     }
 

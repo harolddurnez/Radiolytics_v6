@@ -8,6 +8,7 @@ import logging
 from datetime import datetime
 import threading
 from collections import deque
+from dotenv import load_dotenv
 
 # --- CONFIGURATION ---
 POLL_INTERVAL = 5  # seconds
@@ -27,12 +28,18 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # --- FIREBASE SETUP ---
-cred = credentials.Certificate("service-account.json")
+load_dotenv()
+
+cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+cred = credentials.Certificate(cred_path)
 firebase_admin.initialize_app(cred, {
     'storageBucket': 'newbuckettest.firebasestorage.app'
 })
 bucket = storage.bucket()
 db = firestore.client()
+
+# Update all local fingerprint file output to use FINGERPRINT_OUTPUT_PATH from .env
+FINGERPRINT_OUTPUT_PATH = os.getenv("FINGERPRINT_OUTPUT_PATH", "ADMIN DO NOT COMMIT/fingerprints/")
 
 class FingerprintMatcher:
     def __init__(self):
@@ -204,7 +211,7 @@ class FingerprintMatcher:
                     self.processed_files.add(blob.name)
                     
                     # Also save locally
-                    local_dir = os.path.join('Fingerprints', 'local_incoming_fingerprints')
+                    local_dir = FINGERPRINT_OUTPUT_PATH
                     os.makedirs(local_dir, exist_ok=True)
                     local_path = os.path.join(local_dir, os.path.basename(blob.name))
                     with open(local_path, 'w') as f:
