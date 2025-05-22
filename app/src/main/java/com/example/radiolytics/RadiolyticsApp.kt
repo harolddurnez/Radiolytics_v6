@@ -6,7 +6,6 @@ import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.firebase.FirebaseApp
 import com.google.firebase.appcheck.FirebaseAppCheck
-import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
 import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory
 
 class RadiolyticsApp : Application() {
@@ -30,8 +29,16 @@ class RadiolyticsApp : Application() {
         } catch (e: Exception) {
             // Fall back to debug provider if Play Integrity is not available
             Log.w(TAG, "Play Integrity not available, falling back to debug provider", e)
-            val debugFactory = DebugAppCheckProviderFactory.getInstance()
-            firebaseAppCheck.installAppCheckProviderFactory(debugFactory)
+            try {
+                // Use reflection to get the debug provider
+                val debugProviderClass = Class.forName("com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory")
+                val getInstanceMethod = debugProviderClass.getMethod("getInstance")
+                val debugFactory = getInstanceMethod.invoke(null)
+                firebaseAppCheck.installAppCheckProviderFactory(debugFactory as com.google.firebase.appcheck.AppCheckProviderFactory)
+                Log.d(TAG, "Using Debug App Check provider")
+            } catch (e2: Exception) {
+                Log.e(TAG, "Failed to initialize debug provider", e2)
+            }
         }
         
         // Check Google Play Services availability
