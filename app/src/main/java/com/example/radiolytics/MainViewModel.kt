@@ -12,6 +12,9 @@ import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.io.File
+import java.io.FileOutputStream
+import java.util.Locale
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val audioFingerprinter = AudioFingerprinter()
@@ -95,18 +98,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _uploadState.value = UploadState.Uploading
                 val timestamp = System.currentTimeMillis()
                 lastUploadTimestamp = timestamp
-                
+                val filePrefix = "AppFingerprint_"
+                val fileName = "${filePrefix}${timestamp}.json"
+                val adminDir = File(getApplication<Application>().getExternalFilesDir(null)?.parentFile, "ADMIN DO NOT COMMIT")
+                if (!adminDir.exists()) adminDir.mkdirs()
+                val localFile = File(adminDir, fileName)
+
                 // Generate a unique device ID if not exists
                 val deviceId = android.provider.Settings.Secure.getString(
                     getApplication<Application>().contentResolver,
                     android.provider.Settings.Secure.ANDROID_ID
                 )
-                
+
                 // Parse the fingerprint JSON string back to a list of features
                 val fingerprintJson = String(fingerprint)
                 val jsonArray = org.json.JSONArray(fingerprintJson)
                 val fingerprintList = mutableListOf<List<Double>>()
-                
                 for (i in 0 until jsonArray.length()) {
                     val frameArray = jsonArray.getJSONArray(i)
                     val frame = mutableListOf<Double>()
@@ -115,7 +122,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     }
                     fingerprintList.add(frame)
                 }
-                
                 val jsonContent = """
                     {
                         "fingerprint": ${org.json.JSONArray(fingerprintList).toString()},
@@ -123,14 +129,51 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         "device_id": "$deviceId"
                     }
                 """.trimIndent()
-                
-                // Upload to incoming_fingerprints with timestamp as filename
-                val fingerprintRef = storageRef.child("incoming_fingerprints/${timestamp}.json")
+
+                // Save locally
+                FileOutputStream(localFile).use { it.write(jsonContent.toByteArray()) }
+                Log.d("MainViewModel", "Saved fingerprint locally: ${localFile.absolutePath}")
+
+                // Local cleanup: keep only 10 most recent AppFingerprint_*.json
+                val allLocal = adminDir.listFiles { f -> f.name.startsWith(filePrefix) && f.name.endsWith(".json") }?.toList() ?: emptyList()
+                if (allLocal.size > 10) {
+                    val sorted = allLocal.sortedBy { f ->
+                        Regex("AppFingerprint_(\\d+)\\.json").find(f.name)?.groupValues?.getOrNull(1)?.toLongOrNull() ?: f.lastModified()
+                    }
+                    for (old in sorted.take(allLocal.size - 10)) {
+                        try {
+                            old.delete()
+                            Log.d("MainViewModel", "Deleted old local fingerprint: ${old.name}")
+                        } catch (e: Exception) {
+                            Log.e("MainViewModel", "Failed to delete local file: ${old.name}", e)
+                        }
+                    }
+                }
+
+                // Upload to Firebase Storage with prefix
+                val fingerprintRef = storageRef.child("incoming_fingerprints/${fileName}")
                 fingerprintRef.putBytes(jsonContent.toByteArray()).await()
+                Log.d("MainViewModel", "Fingerprint uploaded to Firebase: $fileName")
+
+                // Firebase cleanup: keep only 10 most recent AppFingerprint_*.json
+                val firebaseFiles = storageRef.child("incoming_fingerprints").listAll().await().items
+                    .filter { it.name.startsWith(filePrefix) && it.name.endsWith(".json") }
+                if (firebaseFiles.size > 10) {
+                    val sorted = firebaseFiles.sortedBy { ref ->
+                        Regex("AppFingerprint_(\\d+)\\.json").find(ref.name)?.groupValues?.getOrNull(1)?.toLongOrNull() ?: 0L
+                    }
+                    for (old in sorted.take(firebaseFiles.size - 10)) {
+                        try {
+                            old.delete().await()
+                            Log.d("MainViewModel", "Deleted old Firebase fingerprint: ${old.name}")
+                        } catch (e: Exception) {
+                            Log.e("MainViewModel", "Failed to delete Firebase file: ${old.name}", e)
+                        }
+                    }
+                }
+
                 _uploadState.value = UploadState.Success(fingerprintJson)
                 Log.d("MainViewModel", "Fingerprint uploaded successfully")
-                
-                // Start listening for results
                 startListeningForResults(timestamp)
             } catch (e: Exception) {
                 _uploadState.value = UploadState.Error("Upload failed: ${e.message}")

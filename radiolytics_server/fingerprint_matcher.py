@@ -158,103 +158,88 @@ class FingerprintMatcher:
     def _process_incoming_fingerprints(self):
         """Process new incoming fingerprints from Firebase Storage"""
         try:
-            # List all incoming fingerprints
-            blobs = self.bucket.list_blobs(prefix="incoming_fingerprints/")
-            
+            # List all incoming fingerprints with AppFingerprint_ prefix
+            blobs = [blob for blob in self.bucket.list_blobs(prefix="incoming_fingerprints/")
+                     if blob.name.endswith('.json') and os.path.basename(blob.name).startswith('AppFingerprint_')]
+
+            # Group blobs by device_id (parsed from file content)
+            device_files = {}
             for blob in blobs:
+                try:
+                    data = json.loads(blob.download_as_text())
+                    device_id = data.get('device_id')
+                    timestamp = data.get('timestamp')
+                    if not device_id or not timestamp:
+                        logger.warning(f"Missing device_id or timestamp in {blob.name}")
+                        continue
+                    if device_id not in device_files:
+                        device_files[device_id] = []
+                    device_files[device_id].append((timestamp, blob, data))
+                except Exception as e:
+                    logger.error(f"Error reading blob {blob.name}: {str(e)}")
+                    continue
+
+            # For each device, process only the most recent file
+            for device_id, files in device_files.items():
+                # Sort by timestamp descending
+                files_sorted = sorted(files, key=lambda x: x[0], reverse=True)
+                newest = files_sorted[0]
+                timestamp, blob, data = newest
                 if blob.name in self.processed_files:
                     continue
-                    
-                if not blob.name.endswith('.json'):
-                    continue
-                    
-                # Skip the latest fingerprint file as it's being actively used
-                if blob.name == "incoming_fingerprints/latest.json":
-                    continue
-                
+                uploaded_fp = data.get('fingerprint')
+                uploaded_ts = data.get('timestamp')
+                # Find best match
+                best_match = self._find_best_match(uploaded_fp)
+                if best_match:
+                    match_ts, match_station, similarity = best_match
+                    result = {
+                        "matched_at": int(time.time() * 1000),
+                        "match_timestamp": match_ts,
+                        "station": match_station,
+                        "confidence": float(similarity)
+                    }
+                    self.db.collection("results").document(str(uploaded_ts)).set(result)
+                    logger.info(f"Matched {blob.name} to {match_station} with confidence {similarity:.2f}")
+                else:
+                    result = {
+                        "matched_at": int(time.time() * 1000),
+                        "station": "Unknown",
+                        "confidence": 0.0
+                    }
+                    self.db.collection("results").document(str(uploaded_ts)).set(result)
+                    logger.info(f"No match found for {blob.name}")
+                self.processed_files.add(blob.name)
+                # Save locally
+                local_dir = FINGERPRINT_OUTPUT_PATH
+                os.makedirs(local_dir, exist_ok=True)
+                local_path = os.path.join(local_dir, os.path.basename(blob.name))
+                with open(local_path, 'w') as f:
+                    f.write(blob.download_as_text())
+                logger.info(f"Saved incoming fingerprint locally at {local_path}")
+                # Move to processed_fingerprints
                 try:
-                    # Download and parse
-                    data = json.loads(blob.download_as_text())
-                    uploaded_fp = data.get('fingerprint')
-                    uploaded_ts = data.get('timestamp')
-                    device_id = data.get('device_id')
-                    
-                    if not all([uploaded_fp, uploaded_ts, device_id]):
-                        logger.warning(f"Missing data in {blob.name}")
-                        continue
-                    
-                    # Find best match
-                    best_match = self._find_best_match(uploaded_fp)
-                    
-                    if best_match:
-                        match_ts, match_station, similarity = best_match
-                        # Write result to Firestore
-                        result = {
-                            "matched_at": int(time.time() * 1000),
-                            "match_timestamp": match_ts,
-                            "station": match_station,
-                            "confidence": float(similarity)
-                        }
-                        self.db.collection("results").document(str(uploaded_ts)).set(result)
-                        logger.info(f"Matched {blob.name} to {match_station} with confidence {similarity:.2f}")
-                    else:
-                        # Write "no match" result
-                        result = {
-                            "matched_at": int(time.time() * 1000),
-                            "station": "Unknown",
-                            "confidence": 0.0
-                        }
-                        self.db.collection("results").document(str(uploaded_ts)).set(result)
-                        logger.info(f"No match found for {blob.name}")
-                    
-                    # Mark as processed
-                    self.processed_files.add(blob.name)
-                    
-                    # Also save locally
-                    local_dir = FINGERPRINT_OUTPUT_PATH
-                    os.makedirs(local_dir, exist_ok=True)
-                    local_path = os.path.join(local_dir, os.path.basename(blob.name))
-                    with open(local_path, 'w') as f:
-                        f.write(blob.download_as_text())
-                    logger.info(f"Saved incoming fingerprint locally at {local_path}")
-                    
-                    # Instead of deleting, move to processed_fingerprints directory with public read access
-                    try:
-                        # Create a new blob in processed_fingerprints
-                        new_blob_name = f"processed_fingerprints/{os.path.basename(blob.name)}"
-                        new_blob = self.bucket.blob(new_blob_name)
-                        
-                        # Set content type and public read access
-                        new_blob.content_type = 'application/json'
-                        new_blob.content_disposition = 'attachment; filename="' + os.path.basename(blob.name) + '"'
-                        
-                        # Copy the content
-                        new_blob.upload_from_string(
-                            blob.download_as_text(),
-                            content_type='application/json'
-                        )
-                        
-                        # Make the blob publicly readable
-                        new_blob.make_public()
-                        
-                        # Get the public URL
-                        public_url = new_blob.public_url
-                        logger.info(f"Moved {blob.name} to {new_blob_name} - Public URL: {public_url}")
-                        
-                        # Delete the original blob
-                        blob.delete()
-                        
-                    except Exception as e:
-                        logger.error(f"Error moving fingerprint file {blob.name}: {str(e)}")
-                        # Don't delete the original if move fails
-                        continue
-                    
+                    new_blob_name = f"processed_fingerprints/{os.path.basename(blob.name)}"
+                    new_blob = self.bucket.blob(new_blob_name)
+                    new_blob.content_type = 'application/json'
+                    new_blob.content_disposition = 'attachment; filename="' + os.path.basename(blob.name) + '"'
+                    new_blob.upload_from_string(blob.download_as_text(), content_type='application/json')
+                    new_blob.make_public()
+                    public_url = new_blob.public_url
+                    logger.info(f"Moved {blob.name} to {new_blob_name} - Public URL: {public_url}")
+                    blob.delete()
                 except Exception as e:
-                    logger.error(f"Error processing {blob.name}: {str(e)}")
-                    # Log the full error details
-                    logger.error(f"Full error details for {blob.name}:", exc_info=True)
+                    logger.error(f"Error moving fingerprint file {blob.name}: {str(e)}")
                     continue
-                    
+                # Cleanup: keep only 10 most recent AppFingerprint_*.json per device
+                if len(files_sorted) > 10:
+                    for old in files_sorted[10:]:
+                        old_blob = old[1]
+                        try:
+                            old_blob.delete()
+                            logger.info(f"Deleted old Firebase fingerprint for device {device_id}: {old_blob.name}")
+                        except Exception as e:
+                            logger.error(f"Failed to delete old Firebase file {old_blob.name}: {str(e)}")
         except Exception as e:
             logger.error(f"Error processing incoming fingerprints: {str(e)}")
             logger.error("Full error details:", exc_info=True)
