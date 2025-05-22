@@ -9,12 +9,37 @@ from datetime import datetime
 import threading
 from collections import deque
 from dotenv import load_dotenv
+import csv
+from typing import List, Tuple, Optional, Dict, Any
+import argparse
+import pandas as pd
+
+"""
+Radiolytics Fingerprint Matcher
+
+Fingerprint JSON format:
+{
+    "fingerprint": [[RMS, centroid, energy, dB], ...],
+    "timestamp": <int>,
+    "device_id" or "station": <str>
+}
+
+Expected flow:
+- Load reference and app fingerprints (N x 4 float arrays)
+- For each app fingerprint, slide over reference fingerprints using a window/cross-correlation
+- Find the best alignment (offset) and similarity
+- Log successful matches to CSV
+- Configurable thresholds via config.json or CLI
+"""
 
 # --- CONFIGURATION ---
-POLL_INTERVAL = 5  # seconds
-MATCH_THRESHOLD = 0.75  # Increased threshold to 75% similarity for more accurate matches
-BUFFER_MINUTES = 3  # Match against last 3 minutes of fingerprints
-MIN_FRAMES_MATCH = 10  # Minimum number of frames that must match above threshold
+with open('radiolytics_server/config.json', 'r') as f:
+    config = json.load(f)
+POLL_INTERVAL = config.get('POLL_INTERVAL', 5)
+MATCH_THRESHOLD = config.get('MATCH_THRESHOLD', 0.75)
+MIN_FRAMES_MATCH = config.get('MIN_FRAMES_MATCH', 10)
+BUFFER_MINUTES = config.get('BUFFER_MINUTES', 3)
+LOG_CSV = config.get('LOG_CSV', 'successful_matches.csv')
 
 # --- LOGGING SETUP ---
 logging.basicConfig(
@@ -43,13 +68,15 @@ FINGERPRINT_OUTPUT_PATH = os.getenv("FINGERPRINT_OUTPUT_PATH", "ADMIN DO NOT COM
 
 class FingerprintMatcher:
     def __init__(self):
+        """Initialize matcher, load config, and set up logging."""
         self.processed_files = set()
-        self.reference_fingerprints = {}  # station -> list of (timestamp, station, fingerprint)
-        self.MATCH_THRESHOLD = 0.75  # 75% similarity required for a match
-        self.MIN_FRAMES_MATCH = 10  # Minimum frames that must match above threshold
-        self.BUFFER_MINUTES = 3  # Match against last 3 minutes of fingerprints
+        self.reference_fingerprints: Dict[str, List[Tuple[int, str, List[List[float]]]]] = {}
+        self.MATCH_THRESHOLD = MATCH_THRESHOLD
+        self.MIN_FRAMES_MATCH = MIN_FRAMES_MATCH
+        self.BUFFER_MINUTES = BUFFER_MINUTES
         self.is_running = False
         self.thread = None
+        self.log_csv = LOG_CSV
         
         # Initialize reference fingerprint buffers for each station
         self._load_station_config()
@@ -244,121 +271,144 @@ class FingerprintMatcher:
             logger.error(f"Error processing incoming fingerprints: {str(e)}")
             logger.error("Full error details:", exc_info=True)
 
-    def _find_best_match(self, uploaded_fp):
-        """Find the best matching reference fingerprint with improved logging"""
+    def _find_best_match(self, uploaded_fp: List[List[float]]) -> Optional[Tuple[int, str, float, int]]:
+        """
+        Find the best matching reference fingerprint using sliding window/cross-correlation.
+        Returns (timestamp, station, similarity, offset) for the best match.
+        """
         try:
             best_match = None
             best_similarity = 0.0
-            
-            # Convert uploaded fingerprint to numpy array
+            best_offset = 0
+            best_station = None
             uploaded_fp = np.array(uploaded_fp)
-            
-            # Ensure uploaded fingerprint is 2D array
             if len(uploaded_fp.shape) == 1:
                 uploaded_fp = uploaded_fp.reshape(1, -1)
-            
-            logger.info(f"Finding match for uploaded fingerprint with shape: {uploaded_fp.shape}")
-            
             for station, fingerprints in self.reference_fingerprints.items():
-                logger.debug(f"Checking {len(fingerprints)} fingerprints for station {station}")
-                
                 for ref_ts, ref_st, ref_fp in fingerprints:
-                    try:
-                        # Convert reference fingerprint to numpy array
-                        ref_fp = np.array(ref_fp)
-                        
-                        # Ensure reference fingerprint is 2D array
-                        if len(ref_fp.shape) == 1:
-                            ref_fp = ref_fp.reshape(1, -1)
-                        
-                        # Calculate similarity
-                        similarity = self._cosine_similarity(uploaded_fp, ref_fp)
-                        
-                        if similarity > best_similarity:
-                            best_similarity = similarity
-                            best_match = (ref_ts, station, similarity)
-                            logger.debug(f"New best match: {station} at {ref_ts} with confidence {similarity:.3f}")
-                            
-                    except Exception as e:
-                        logger.error(f"Error processing reference fingerprint for {station}: {str(e)}")
-                        continue
-            
-            if best_match:
-                logger.info(f"Best match found: {best_match[1]} at {best_match[0]} with confidence {best_match[2]:.3f}")
+                    ref_fp = np.array(ref_fp)
+                    if len(ref_fp.shape) == 1:
+                        ref_fp = ref_fp.reshape(1, -1)
+                    # Sliding window: slide uploaded_fp over ref_fp
+                    n = len(ref_fp)
+                    m = len(uploaded_fp)
+                    if m > n:
+                        continue  # Can't match if query is longer than reference
+                    for offset in range(n - m + 1):
+                        window = ref_fp[offset:offset + m]
+                        # Cosine similarity per frame, then mean
+                        sims = [np.dot(u / (np.linalg.norm(u) + 1e-10), w / (np.linalg.norm(w) + 1e-10))
+                                for u, w in zip(uploaded_fp, window)]
+                        avg_sim = np.mean(sims)
+                        if avg_sim > best_similarity:
+                            best_similarity = avg_sim
+                            best_match = (ref_ts, station, avg_sim, offset)
+            if best_match and best_similarity >= self.MATCH_THRESHOLD:
+                logger.info(f"Best match: station={best_match[1]}, ts={best_match[0]}, sim={best_match[2]:.3f}, offset={best_match[3]}")
+                self._log_successful_match(best_match, uploaded_fp.shape[0])
+                return best_match
             else:
                 logger.info("No match found above threshold")
-                
-            return best_match
-            
+                return None
         except Exception as e:
             logger.error(f"Error in find_best_match: {str(e)}")
             return None
 
-    def _cosine_similarity(self, fp1, fp2):
-        """Calculate cosine similarity between two fingerprints with improved validation"""
+    def _log_successful_match(self, match: Tuple[int, str, float, int], query_len: int):
+        """
+        Append a successful match to the CSV log.
+        """
         try:
-            # Ensure both fingerprints are 2D arrays
-            fp1 = np.array(fp1)
-            fp2 = np.array(fp2)
-            
-            if len(fp1.shape) == 1:
-                fp1 = fp1.reshape(1, -1)
-            if len(fp2.shape) == 1:
-                fp2 = fp2.reshape(1, -1)
-            
-            # Log fingerprint shapes for debugging
-            logger.debug(f"Fingerprint shapes - fp1: {fp1.shape}, fp2: {fp2.shape}")
-            
-            # Validate fingerprint lengths
-            if fp1.shape[1] != fp2.shape[1]:
-                logger.warning(f"Fingerprint dimension mismatch: {fp1.shape[1]} vs {fp2.shape[1]}")
-                return 0.0
-                
-            # Normalize each frame
-            fp1_norm = fp1 / (np.linalg.norm(fp1, axis=1, keepdims=True) + 1e-10)
-            fp2_norm = fp2 / (np.linalg.norm(fp2, axis=1, keepdims=True) + 1e-10)
-            
-            # Calculate similarity for each frame
-            similarities = []
-            for i in range(min(len(fp1), len(fp2))):
-                sim = np.dot(fp1_norm[i], fp2_norm[i])
-                similarities.append(sim)
-            
-            # Count frames that exceed threshold
-            high_similarity_frames = sum(1 for s in similarities if s >= self.MATCH_THRESHOLD)
-            avg_similarity = np.mean(similarities) if similarities else 0.0
-            
-            # Log detailed matching info
-            logger.debug(f"Frame similarities - avg: {avg_similarity:.3f}, "
-                        f"high similarity frames: {high_similarity_frames}/{len(similarities)}")
-            
-            # Only return high similarity if enough frames match
-            if high_similarity_frames >= self.MIN_FRAMES_MATCH:
-                return avg_similarity
-            else:
-                logger.debug(f"Insufficient high-similarity frames: {high_similarity_frames} < {self.MIN_FRAMES_MATCH}")
-                return 0.0
-            
+            ref_ts, station, sim, offset = match
+            now = datetime.now().isoformat()
+            with open(self.log_csv, 'a', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow([
+                    self.current_query_filename,
+                    f"{ref_ts}_{station}.json",
+                    sim,
+                    offset,
+                    query_len,
+                    offset / 8,  # assuming 8 frames/sec for 8000Hz, 512 samples, 50% overlap
+                    now
+                ])
         except Exception as e:
-            logger.error(f"Error calculating similarity: {str(e)}")
-            return 0.0
+            logger.error(f"Error logging successful match: {str(e)}")
 
-def main():
+def analyze_log(log_csv: str):
+    """
+    Analyze the match log and print trends, best recording lengths, offsets, and station reliability.
+    Print actionable suggestions based on log data.
+    """
     try:
-        matcher = FingerprintMatcher()
-        matcher.start()
-        
-        # Keep the main thread alive
+        df = pd.read_csv(log_csv, header=None, names=[
+            'query_filename', 'reference_filename', 'similarity', 'offset', 'recording_length', 'time_offset', 'datetime'])
+        if df.empty:
+            print("No matches logged yet.")
+            return
+        print("\n=== Match Log Analytics ===")
+        print(f"Total matches: {len(df)}")
+        # Best average similarity by recording length
+        best_len = df.groupby('recording_length')['similarity'].mean().idxmax()
+        print(f"Best recording length (avg similarity): {best_len} frames")
+        # Best average similarity by offset
+        best_offset = df.groupby('offset')['similarity'].mean().idxmax()
+        print(f"Best offset (avg similarity): {best_offset} frames")
+        # Most reliably matched station
+        best_station = df.groupby('reference_filename')['similarity'].mean().idxmax()
+        print(f"Most reliably matched station: {best_station}")
+        # Suggestion
+        print(f"\nSuggestion: Try recording {best_len / 8:.1f} seconds for best results (assuming 8 frames/sec)")
+        print("==========================\n")
+    except Exception as e:
+        print(f"Error analyzing log: {e}")
+
+def load_json_file(path: str) -> Any:
+    """Utility to load a JSON file with error handling."""
+    try:
+        with open(path, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        logger.error(f"Error loading JSON file {path}: {str(e)}")
+        return None
+
+def save_json_file(path: str, data: Any) -> bool:
+    """Utility to save a JSON file with error handling."""
+    try:
+        with open(path, 'w') as f:
+            json.dump(data, f)
+        return True
+    except Exception as e:
+        logger.error(f"Error saving JSON file {path}: {str(e)}")
+        return False
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Radiolytics Fingerprint Matcher CLI")
+    parser.add_argument('--analyze-log', action='store_true', help='Analyze the match log and print trends')
+    parser.add_argument('--log-csv', type=str, default=LOG_CSV, help='Path to match log CSV')
+    parser.add_argument('--run-matcher', action='store_true', help='Run the fingerprint matcher service')
+    args = parser.parse_args()
+
+    if args.analyze_log:
         try:
+            analyze_log(args.log_csv)
+        except Exception as e:
+            print(f"Error running log analysis: {e}")
+    elif args.run_matcher:
+        try:
+            matcher = FingerprintMatcher()
+            matcher.start()
+            print("Matcher service started. Press Ctrl+C to stop.")
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
             logger.info("Shutting down...")
+            print("Matcher service stopped.")
+        except Exception as e:
+            logger.error(f"Error running matcher: {str(e)}")
+            print(f"Error running matcher: {e}")
         finally:
             matcher.stop()
-            
-    except Exception as e:
-        logger.error(f"Main error: {str(e)}")
-
-if __name__ == "__main__":
-    main() 
+    else:
+        print("No valid command provided. Use --help for usage information.")
+        parser.print_help() 
