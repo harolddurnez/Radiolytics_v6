@@ -33,7 +33,8 @@ Expected flow:
 """
 
 # --- CONFIGURATION ---
-with open('radiolytics_server/config.json', 'r') as f:
+CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.json')
+with open(CONFIG_PATH, 'r') as f:
     config = json.load(f)
 POLL_INTERVAL = config.get('POLL_INTERVAL', 5)
 MATCH_THRESHOLD = config.get('MATCH_THRESHOLD', 0.75)
@@ -137,9 +138,8 @@ class FingerprintMatcher:
         try:
             cutoff_time = int(time.time()) - (self.BUFFER_MINUTES * 60)
             
-            # List all reference fingerprints
-            blobs = self.bucket.list_blobs(prefix="reference_fingerprints/")
-            
+            # List all fingerprints (reference and app) from the root 'fingerprints/' folder
+            blobs = self.bucket.list_blobs(prefix="fingerprints/")
             for blob in blobs:
                 if not blob.name.endswith('.json'):
                     continue
@@ -147,8 +147,9 @@ class FingerprintMatcher:
                 # Extract timestamp and station from filename
                 try:
                     filename = blob.name.split('/')[-1]
-                    timestamp = int(filename.split('_')[0])
-                    station = filename.split('_')[1].split('.')[0]
+                    parts = filename.replace('LiveStreamFingerprint_', '').split('_')
+                    timestamp = int(parts[0])
+                    station = '_'.join(parts[1:]).replace('.json', '')
                 except (ValueError, IndexError):
                     continue
                     
@@ -219,7 +220,13 @@ class FingerprintMatcher:
                 # Find best match
                 best_match = self._find_best_match(uploaded_fp)
                 if best_match:
-                    match_ts, match_station, similarity = best_match
+                    match_ts, match_station, similarity, offset = best_match
+                    logger.info(f"Best match: station={match_station}, ts={match_ts}, sim={similarity:.3f}, offset={offset}")
+                    try:
+                        self._log_successful_match(os.path.basename(blob.name), match_station, similarity, offset, len(uploaded_fp), offset, datetime.now().isoformat())
+                    except Exception as e:
+                        logger.error(f"Error logging successful match: {e}")
+                    # Write result to Firestore so the app can display the correct match
                     result = {
                         "matched_at": int(time.time() * 1000),
                         "match_timestamp": match_ts,
@@ -227,7 +234,7 @@ class FingerprintMatcher:
                         "confidence": float(similarity)
                     }
                     self.db.collection("results").document(str(uploaded_ts)).set(result)
-                    logger.info(f"Matched {blob.name} to {match_station} with confidence {similarity:.2f}")
+                    logger.info(f"Wrote match result to Firestore for {os.path.basename(blob.name)}")
                 else:
                     result = {
                         "matched_at": int(time.time() * 1000),
@@ -235,18 +242,19 @@ class FingerprintMatcher:
                         "confidence": 0.0
                     }
                     self.db.collection("results").document(str(uploaded_ts)).set(result)
-                    logger.info(f"No match found for {blob.name}")
+                    logger.info(f"No match found for {os.path.basename(blob.name)}")
                 self.processed_files.add(blob.name)
-                # Save locally
-                local_dir = FINGERPRINT_OUTPUT_PATH
-                os.makedirs(local_dir, exist_ok=True)
-                local_path = os.path.join(local_dir, os.path.basename(blob.name))
-                with open(local_path, 'w') as f:
-                    f.write(blob.download_as_text())
-                logger.info(f"Saved incoming fingerprint locally at {local_path}")
-                # Move to processed_fingerprints
+                # Save locally (only for AppFingerprint_ prefix)
+                if os.path.basename(blob.name).startswith('AppFingerprint_'):
+                    local_dir = FINGERPRINT_OUTPUT_PATH
+                    os.makedirs(local_dir, exist_ok=True)
+                    local_path = os.path.join(local_dir, os.path.basename(blob.name))
+                    with open(local_path, 'w') as f:
+                        f.write(blob.download_as_text())
+                    logger.info(f"Saved incoming fingerprint locally at {local_path}")
+                # Move to fingerprints (root folder)
                 try:
-                    new_blob_name = f"processed_fingerprints/{os.path.basename(blob.name)}"
+                    new_blob_name = f"fingerprints/{os.path.basename(blob.name)}"
                     new_blob = self.bucket.blob(new_blob_name)
                     new_blob.content_type = 'application/json'
                     new_blob.content_disposition = 'attachment; filename="' + os.path.basename(blob.name) + '"'
@@ -268,7 +276,7 @@ class FingerprintMatcher:
                         except Exception as e:
                             logger.error(f"Failed to delete old Firebase file {old_blob.name}: {str(e)}")
         except Exception as e:
-            logger.error(f"Error processing incoming fingerprints: {str(e)}")
+            logger.error(f"Error processing incoming fingerprints: {e}")
             logger.error("Full error details:", exc_info=True)
 
     def _find_best_match(self, uploaded_fp: List[List[float]]) -> Optional[Tuple[int, str, float, int]]:
@@ -305,7 +313,6 @@ class FingerprintMatcher:
                             best_match = (ref_ts, station, avg_sim, offset)
             if best_match and best_similarity >= self.MATCH_THRESHOLD:
                 logger.info(f"Best match: station={best_match[1]}, ts={best_match[0]}, sim={best_match[2]:.3f}, offset={best_match[3]}")
-                self._log_successful_match(best_match, uploaded_fp.shape[0])
                 return best_match
             else:
                 logger.info("No match found above threshold")
@@ -314,26 +321,13 @@ class FingerprintMatcher:
             logger.error(f"Error in find_best_match: {str(e)}")
             return None
 
-    def _log_successful_match(self, match: Tuple[int, str, float, int], query_len: int):
-        """
-        Append a successful match to the CSV log.
-        """
+    def _log_successful_match(self, query_filename, reference_filename, similarity, offset, recording_length, time_offset, dt):
+        """Log a successful match to the CSV log."""
         try:
-            ref_ts, station, sim, offset = match
-            now = datetime.now().isoformat()
-            with open(self.log_csv, 'a', newline='') as f:
-                writer = csv.writer(f)
-                writer.writerow([
-                    self.current_query_filename,
-                    f"{ref_ts}_{station}.json",
-                    sim,
-                    offset,
-                    query_len,
-                    offset / 8,  # assuming 8 frames/sec for 8000Hz, 512 samples, 50% overlap
-                    now
-                ])
+            with open(self.log_csv, 'a') as f:
+                f.write(f"{query_filename},{reference_filename},{similarity},{offset},{recording_length},{time_offset},{dt}\n")
         except Exception as e:
-            logger.error(f"Error logging successful match: {str(e)}")
+            logger.error(f"Error writing to log CSV: {e}")
 
 def analyze_log(log_csv: str):
     """

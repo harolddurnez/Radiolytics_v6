@@ -219,9 +219,10 @@ class RadioStreamRecorder:
             json_data = json.dumps(data)
             
             # Upload to Firebase Storage
-            blob = bucket.blob(f"reference_fingerprints/{timestamp}_{self.station_name}.json")
+            filename = f"LiveStreamFingerprint_{timestamp}_{self.station_name}.json"
+            blob = bucket.blob(f"fingerprints/{filename}")
             blob.upload_from_string(json_data, content_type='application/json')
-            blob.content_disposition = f'attachment; filename="{timestamp}_{self.station_name}.json"'
+            blob.content_disposition = f'attachment; filename="{filename}"'
             blob.patch()  # Save the content_disposition
             blob.make_public()  # Make the blob publicly readable
             logger.info(f"Saved fingerprint for {self.station_name} at {timestamp} - Public URL: {blob.public_url}")
@@ -229,7 +230,7 @@ class RadioStreamRecorder:
             # Also save locally
             local_dir = FINGERPRINT_OUTPUT_PATH
             os.makedirs(local_dir, exist_ok=True)
-            local_path = os.path.join(local_dir, f"{timestamp}_{self.station_name}.json")
+            local_path = os.path.join(local_dir, filename)
             with open(local_path, 'w') as f:
                 json.dump({"fingerprint": fingerprint, "timestamp": timestamp, "station": self.station_name}, f)
             logger.info(f"Saved reference fingerprint locally at {local_path}")
