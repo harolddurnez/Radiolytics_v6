@@ -17,9 +17,16 @@ import java.io.FileOutputStream
 import java.util.Locale
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
+    companion object {
+        private const val RECORDING_INTERVAL_MS = 3000L // 3 seconds
+        private const val MAX_BUFFER_MINUTES = 1 // Keep 1 minute of fingerprints
+    }
+
     private val audioFingerprinter = AudioFingerprinter()
     private val storage = FirebaseStorage.getInstance()
     private val storageRef = storage.reference
+    private var isRecordingContinuously = false
+    private var recordingJob: kotlinx.coroutines.Job? = null
 
     private val _recordingState = MutableLiveData<RecordingState>()
     val recordingState: LiveData<RecordingState> = _recordingState
@@ -57,35 +64,49 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun startRecording() {
+        if (isRecordingContinuously) {
+            stopRecording()
+            return
+        }
+
+        isRecordingContinuously = true
         _recordingState.value = RecordingState.Recording
-        viewModelScope.launch(Dispatchers.IO) {
-                try {
-                    audioFingerprinter.startRecording()
-                // Record for 10 seconds
+
+        recordingJob = viewModelScope.launch(Dispatchers.IO) {
+            try {
+                audioFingerprinter.startRecording()
+                while (isRecordingContinuously) {
                     val startTime = System.currentTimeMillis()
-                var frameCount = 0
-                while (System.currentTimeMillis() - startTime < 10000) {
+                    var frameCount = 0
+                    while (System.currentTimeMillis() - startTime < RECORDING_INTERVAL_MS) {
                         if (!audioFingerprinter.processAudioChunk()) {
                             break
+                        }
+                        frameCount++
+                        kotlinx.coroutines.delay(50)
                     }
-                    frameCount++
-                    kotlinx.coroutines.delay(50)
-                }
-                Log.d("MainViewModel", "Recorded $frameCount frames")
+                    Log.d("MainViewModel", "Recorded $frameCount frames")
                     val fingerprint = audioFingerprinter.stopRecording()
-                if (frameCount > 0) {
-                    uploadFingerprint(fingerprint)
-                } else {
-                    Log.w("MainViewModel", "No frames recorded, skipping upload")
+                    if (frameCount > 0) {
+                        uploadFingerprint(fingerprint)
+                    } else {
+                        Log.w("MainViewModel", "No frames recorded, skipping upload")
+                    }
+                    // Start a new recording immediately
+                    audioFingerprinter.startRecording()
                 }
             } catch (e: Exception) {
                 _recordingState.postValue(RecordingState.Error("Recording error: ${e.message}"))
+                isRecordingContinuously = false
             }
             _recordingState.postValue(RecordingState.Idle)
         }
     }
 
     fun stopRecording() {
+        isRecordingContinuously = false
+        recordingJob?.cancel()
+        recordingJob = null
         try {
             audioFingerprinter.stopRecording()
         } catch (_: Exception) {}
@@ -99,7 +120,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val timestamp = System.currentTimeMillis()
                 lastUploadTimestamp = timestamp
                 val filePrefix = "AppFingerprint_"
-                val fileName = "${filePrefix}${timestamp}.json"
+                val fileName = "${filePrefix}${timestamp}_${RECORDING_INTERVAL_MS/1000}s.json"
                 val adminDir = File(getApplication<Application>().getExternalFilesDir(null)?.parentFile, "ADMIN DO NOT COMMIT")
                 if (!adminDir.exists()) adminDir.mkdirs()
                 val localFile = File(adminDir, fileName)
@@ -134,18 +155,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 FileOutputStream(localFile).use { it.write(jsonContent.toByteArray()) }
                 Log.d("MainViewModel", "Saved fingerprint locally: ${localFile.absolutePath}")
 
-                // Local cleanup: keep only 10 most recent AppFingerprint_*.json
+                // Local cleanup: keep only fingerprints from the last MAX_BUFFER_MINUTES
+                val cutoffTime = System.currentTimeMillis() - (MAX_BUFFER_MINUTES * 60 * 1000)
                 val allLocal = adminDir.listFiles { f -> f.name.startsWith(filePrefix) && f.name.endsWith(".json") }?.toList() ?: emptyList()
-                if (allLocal.size > 10) {
-                    val sorted = allLocal.sortedBy { f ->
-                        Regex("AppFingerprint_(\\d+)\\.json").find(f.name)?.groupValues?.getOrNull(1)?.toLongOrNull() ?: f.lastModified()
-                    }
-                    for (old in sorted.take(allLocal.size - 10)) {
+                for (file in allLocal) {
+                    val timestamp = Regex("AppFingerprint_(\\d+)_\\d+s\\.json").find(file.name)?.groupValues?.getOrNull(1)?.toLongOrNull()
+                    if (timestamp != null && timestamp < cutoffTime) {
                         try {
-                            old.delete()
-                            Log.d("MainViewModel", "Deleted old local fingerprint: ${old.name}")
+                            file.delete()
+                            Log.d("MainViewModel", "Deleted old local fingerprint: ${file.name}")
                         } catch (e: Exception) {
-                            Log.e("MainViewModel", "Failed to delete local file: ${old.name}", e)
+                            Log.e("MainViewModel", "Failed to delete local file: ${file.name}", e)
                         }
                     }
                 }
@@ -155,19 +175,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 fingerprintRef.putBytes(jsonContent.toByteArray()).await()
                 Log.d("MainViewModel", "Fingerprint uploaded to Firebase: $fileName")
 
-                // Firebase cleanup: keep only 10 most recent AppFingerprint_*.json
+                // Firebase cleanup: keep only fingerprints from the last MAX_BUFFER_MINUTES
                 val firebaseFiles = storageRef.child("incoming_fingerprints").listAll().await().items
                     .filter { it.name.startsWith(filePrefix) && it.name.endsWith(".json") }
-                if (firebaseFiles.size > 10) {
-                    val sorted = firebaseFiles.sortedBy { ref ->
-                        Regex("AppFingerprint_(\\d+)\\.json").find(ref.name)?.groupValues?.getOrNull(1)?.toLongOrNull() ?: 0L
-                    }
-                    for (old in sorted.take(firebaseFiles.size - 10)) {
+                for (file in firebaseFiles) {
+                    val timestamp = Regex("AppFingerprint_(\\d+)_\\d+s\\.json").find(file.name)?.groupValues?.getOrNull(1)?.toLongOrNull()
+                    if (timestamp != null && timestamp < cutoffTime) {
                         try {
-                            old.delete().await()
-                            Log.d("MainViewModel", "Deleted old Firebase fingerprint: ${old.name}")
+                            file.delete().await()
+                            Log.d("MainViewModel", "Deleted old Firebase fingerprint: ${file.name}")
                         } catch (e: Exception) {
-                            Log.e("MainViewModel", "Failed to delete Firebase file: ${old.name}", e)
+                            Log.e("MainViewModel", "Failed to delete Firebase file: ${file.name}", e)
                         }
                     }
                 }
@@ -221,6 +239,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     override fun onCleared() {
         super.onCleared()
+        stopRecording()
         currentListener?.invoke()
     }
 } 
