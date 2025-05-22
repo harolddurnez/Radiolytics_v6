@@ -1,0 +1,123 @@
+Build a fully functional FM radio station identification system called Radiolytics, made up of:
+1. An Android app written in Kotlin using Android Studio
+2. A Python backend (run locally) for:
+   - Continuously recording and fingerprinting radio station streams
+   - Matching uploaded fingerprints from the app
+
+Use my provided Firebase config file (google-services.json) located at: D:\_WORK\Radiolytics\app\google-services.json
+
+Use only essential dependencies. Avoid native build tools like NDK, JNI, FFmpeg-on-Android, or other external fingerprinting libraries.
+
+PROJECT STRUCTURE:
+
+D:\_WORK\Radiolytics\
+├── app\                             # Android Studio project folder
+│   └── google-services.json
+├── radiolytics_server\             # Python backend folder
+│   ├── reference_recorder.py
+│   ├── fingerprint_matcher.py
+│   ├── config.json
+│   └── requirements.txt
+
+--- 
+
+PART 1: ANDROID APP (KOTLIN)
+
+Goal:
+Record mic audio → generate a lightweight custom audio fingerprint → upload it to Firebase → listen for a result → show matched radio station.
+
+Details:
+- Use AudioRecord to capture 10 seconds of audio (mono, 8000Hz, 16-bit PCM)
+- Frame size: 512 samples, 50% overlap
+- From each frame, extract:
+  - RMS (volume)
+  - Spectral centroid (brightness)
+  - Energy (amplitude sum)
+- Represent each frame as a 3D float vector, stored in a list
+- Output JSON format:
+  {
+    "device_id": "abc123",
+    "timestamp": 1716220000,
+    "fingerprint": [[0.12, 0.65, 0.34], [0.14, 0.67, 0.31], ...]
+  }
+
+- Upload fingerprint JSON to Firebase Storage:
+  /incoming_fingerprints/{device_id}/{timestamp}.json
+
+- Listen to Firestore:
+  /results/{device_id}/{timestamp}
+  and display the result:
+  "Matched: SmileFM (97%) at 13:14"
+
+Tech:
+- Kotlin + ViewModel + LiveData
+- Firebase SDK for Storage and Firestore
+- No Compose, no JNI, no native libs
+- Use standard XML layout with a single "Identify Station" button and a result TextView
+
+---
+
+PART 2: PYTHON BACKEND (MATCHER + RECORDER)
+
+Folder: D:\_WORK\Radiolytics\radiolytics_server\
+
+1. reference_recorder.py
+- Every 10 seconds:
+  - Fetch 10 seconds of audio from each radio stream
+  - Downsample to mono, 8000Hz
+  - Extract fingerprint (same 3D vectors as Android)
+  - Save JSON to:
+    /reference_fingerprints/{station}/{timestamp}.json
+
+2. fingerprint_matcher.py
+- For each fingerprint uploaded to incoming_fingerprints:
+  - Compare against the past 3 minutes of fingerprints for each known station
+  - Use cosine similarity or sliding Euclidean distance
+  - Return best match
+  - Write result to Firestore:
+    /results/{device_id}/{timestamp}.json
+    {
+      "station": "SmileFM",
+      "confidence": 0.94,
+      "matched_at": 1716222050
+    }
+
+Additional Files:
+- config.json:
+  {
+    "stations": {
+      "SmileFM": "https://edge.iono.fm/xice/212_high.aac",
+      "KFM": "https://playerservices.streamtheworld.com/api/livestream-redirect/KFMAAC.aac"
+    }
+  }
+
+- requirements.txt:
+  firebase-admin
+  pydub
+  scipy
+  numpy
+  requests
+
+Note: Some stream URLs like SmileFM may require setting a User-Agent header or using ffmpeg under the hood to avoid timeouts. Handle this automatically if needed.
+
+---
+
+RUN INSTRUCTIONS:
+
+Place a Firebase Admin SDK key as firebase_key.json in the radiolytics_server folder.
+
+In that folder:
+> pip install -r requirements.txt
+> python reference_recorder.py
+> python fingerprint_matcher.py
+
+These can run in parallel or be scheduled using Python's `schedule` or system cron.
+
+---
+
+REQUIREMENTS & RESTRICTIONS:
+
+- Do not use Chromaprint, TarsosDSP, ACRCloud, or FFmpeg on Android
+- Avoid NDK, JNI, or Compose
+- All files and folders must be created automatically
+- The entire system should work when the app is tapped and the Python scripts are running

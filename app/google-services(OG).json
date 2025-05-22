@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "356624833529",
+    "project_id": "listenersyncrelaypc-9c634",
+    "storage_bucket": "listenersyncrelaypc-bucket.appspot.com"
+
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:356624833529:android:f748868fb7d884cdc6bb28",
+        "android_client_info": {
+          "package_name": "com.example.radiolytics"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDmlOmU-hndZ8Tj7VvOXHXhVhkG9uu0vHg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

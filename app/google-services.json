@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "387955196098",
+    "project_id": "newbuckettest",
+    "storage_bucket": "newbuckettest.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:387955196098:android:33e7ddcb6bd2df17017b5b",
+        "android_client_info": {
+          "package_name": "com.example.radiolytics"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBwi22DO5H6snNdCzw3fTcyEW13ZQpus54"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

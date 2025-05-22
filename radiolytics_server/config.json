@@ -1,0 +1,6 @@
+{
+    "stations": {
+        "Smile FM": "https://edge.iono.fm/xice/212_high.aac",
+        "KFM": "https://playerservices.streamtheworld.com/api/livestream-redirect/KFMAAC.aac"
+    }
+} 
