@@ -89,6 +89,8 @@ class FingerprintMatcher:
         # Create processed_fingerprints directory if it doesn't exist
         os.makedirs('processed_fingerprints', exist_ok=True)
         
+        self.last_app_fingerprint_time = 0  # Track last downloaded AppFingerprint
+        
         logger.info("Initialized FingerprintMatcher with threshold %.2f and min frames %d", 
                    self.MATCH_THRESHOLD, self.MIN_FRAMES_MATCH)
 
@@ -198,8 +200,62 @@ class FingerprintMatcher:
                     if ref_ts >= cutoff_time
                 ]
             
+            # Download any new AppFingerprints from Firebase
+            self._download_app_fingerprints()
+            
         except Exception as e:
             logger.error(f"Error loading reference fingerprints: {str(e)}")
+
+    def _download_app_fingerprints(self):
+        """Download new AppFingerprints from Firebase and save them locally, with detailed logging."""
+        try:
+            current_time = time.time()
+            logger.info("Scanning Firebase for AppFingerprint files...")
+            blobs = self.bucket.list_blobs(prefix="fingerprints/")
+            found_any = False
+            for blob in blobs:
+                logger.info(f"Found blob: {blob.name} | repr: {repr(blob.name)}")
+                if "AppFingerprint" in blob.name and blob.name.endswith(".json"):
+                    found_any = True
+                    # Extract timestamp from filename
+                    time_str = blob.name.split('/')[-1].split('_')[0]  # Get HH-mm-ss part
+                    try:
+                        hh, mm, ss = map(int, time_str.split('-'))
+                        now = datetime.now()
+                        dt = now.replace(hour=hh, minute=mm, second=ss, microsecond=0)
+                        timestamp = int(dt.timestamp())
+                        logger.info(f"AppFingerprint candidate: {blob.name} (timestamp: {timestamp})")
+                        # Only download if newer than last download
+                        if timestamp > self.last_app_fingerprint_time:
+                            logger.info(f"Attempting to download {blob.name} to local store...")
+                            content = blob.download_as_string()
+                            # Save all fingerprints to the same directory as LiveStream fingerprints
+                            local_path = os.path.join('D:/_WORK/Radiolytics/radiolytics_server/fingerprints', blob.name.split('/')[-1])
+                            logger.info(f"Saving to local path: {local_path}")
+                            # Ensure directory exists before saving
+                            os.makedirs(os.path.dirname(local_path), exist_ok=True)
+                            with open(local_path, 'wb') as f:
+                                f.write(content)
+                            logger.info(f"Downloaded and saved AppFingerprint: {blob.name}")
+                            # Make the blob public
+                            try:
+                                blob.make_public()
+                                logger.info(f"Made AppFingerprint public: {blob.public_url}")
+                            except Exception as e:
+                                logger.error(f"Failed to make AppFingerprint public: {str(e)}")
+                            # Update last download time
+                            self.last_app_fingerprint_time = max(self.last_app_fingerprint_time, timestamp)
+                        else:
+                            logger.info(f"Skipping {blob.name}: timestamp {timestamp} <= last_app_fingerprint_time {self.last_app_fingerprint_time}")
+                    except Exception as e:
+                        logger.error(f"Error processing AppFingerprint {blob.name}: {str(e)}")
+                        continue
+                else:
+                    logger.info(f"Skipping blob (not AppFingerprint .json): {blob.name}")
+            if not found_any:
+                logger.warning("No AppFingerprint files found in Firebase.")
+        except Exception as e:
+            logger.error(f"Error downloading AppFingerprints: {str(e)}")
 
     def _process_incoming_fingerprints(self):
         """Process new incoming fingerprints from Firebase Storage"""
