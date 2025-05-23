@@ -147,9 +147,27 @@ class FingerprintMatcher:
                 # Extract timestamp and station from filename
                 try:
                     filename = blob.name.split('/')[-1]
-                    parts = filename.replace('LiveStreamFingerprint_', '').split('_')
-                    timestamp = int(parts[0])
-                    station = '_'.join(parts[1:]).replace('.json', '')
+                    # Handle both LiveStreamFingerprint and AppFingerprint formats
+                    # Format: <HH-mm-ss>_<prefix>_<station>_<interval>s.json or <HH-mm-ss>_<prefix>_<interval>s.json
+                    parts = filename.split('_')
+                    if len(parts) < 3:  # Need at least HH-mm-ss, prefix, and station/interval
+                        continue
+                        
+                    # Extract timestamp from HH-mm-ss format
+                    time_str = parts[0]
+                    hh, mm, ss = map(int, time_str.split('-'))
+                    now = datetime.now()
+                    dt = now.replace(hour=hh, minute=mm, second=ss, microsecond=0)
+                    timestamp = int(dt.timestamp())
+                    
+                    # Extract station name
+                    if 'LiveStreamFingerprint' in filename:
+                        # For LiveStreamFingerprint: HH-mm-ss_LiveStreamFingerprint_station_interval.json
+                        station = parts[2]
+                    else:
+                        # For AppFingerprint: HH-mm-ss_AppFingerprint_interval.json
+                        continue  # Skip app fingerprints in reference loading
+                        
                 except (ValueError, IndexError):
                     continue
                     
@@ -186,8 +204,8 @@ class FingerprintMatcher:
     def _process_incoming_fingerprints(self):
         """Process new incoming fingerprints from Firebase Storage"""
         try:
-            # List all incoming fingerprints with AppFingerprint_ prefix
-            blobs = [blob for blob in self.bucket.list_blobs(prefix="incoming_fingerprints/")
+            # List all fingerprints with AppFingerprint_ prefix from the common fingerprints folder
+            blobs = [blob for blob in self.bucket.list_blobs(prefix="fingerprints/")
                      if blob.name.endswith('.json') and os.path.basename(blob.name).startswith('AppFingerprint_')]
 
             # Group blobs by device_id (parsed from file content)
@@ -375,6 +393,19 @@ def save_json_file(path: str, data: Any) -> bool:
     except Exception as e:
         logger.error(f"Error saving JSON file {path}: {str(e)}")
         return False
+
+def extract_timestamp_from_filename(filename):
+    # Handle both LiveStreamFingerprint and AppFingerprint formats
+    # Format: <HH-mm-ss>_<prefix>_<station>_<interval>s.json or <HH-mm-ss>_<prefix>_<interval>s.json
+    try:
+        time_str = filename.split('_')[0]  # Get HH-mm-ss part
+        hh, mm, ss = map(int, time_str.split('-'))
+        # Create a datetime for today with the extracted minutes and seconds
+        now = datetime.now()
+        dt = now.replace(hour=hh, minute=mm, second=ss, microsecond=0)
+        return int(dt.timestamp())
+    except (ValueError, IndexError):
+        return None
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Radiolytics Fingerprint Matcher CLI")

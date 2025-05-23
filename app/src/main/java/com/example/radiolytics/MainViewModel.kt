@@ -18,7 +18,7 @@ import java.util.Locale
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     companion object {
-        private const val RECORDING_INTERVAL_MS = 3000L // 3 seconds
+        private const val RECORDING_INTERVAL_MS = 7000L // enter value in Milliseconds
         private const val MAX_BUFFER_MINUTES = 1 // Keep 1 minute of fingerprints
     }
 
@@ -119,11 +119,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _uploadState.value = UploadState.Uploading
                 val timestamp = System.currentTimeMillis()
                 lastUploadTimestamp = timestamp
+                val dateFormat = java.text.SimpleDateFormat("HH-mm-ss", Locale.getDefault())
+                val readableTimestamp = dateFormat.format(java.util.Date(timestamp))
                 val filePrefix = "AppFingerprint_"
-                val fileName = "${filePrefix}${timestamp}_${RECORDING_INTERVAL_MS/1000}s.json"
-                val adminDir = File(getApplication<Application>().getExternalFilesDir(null)?.parentFile, "ADMIN DO NOT COMMIT")
+                val fileName = "${readableTimestamp}_${filePrefix}${RECORDING_INTERVAL_MS/1000}s.json"
+                // Use absolute path for local storage
+                val adminDir = File("/storage/emulated/0/Android/data/com.example.radiolytics/files/ADMIN DO NOT COMMIT")
                 if (!adminDir.exists()) adminDir.mkdirs()
-                val localFile = File(adminDir, fileName)
+                val fingerprintsDir = File(adminDir, "fingerprints")
+                if (!fingerprintsDir.exists()) fingerprintsDir.mkdirs()
+                val localFile = File(fingerprintsDir, fileName)
 
                 // Generate a unique device ID if not exists
                 val deviceId = android.provider.Settings.Secure.getString(
@@ -157,9 +162,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 // Local cleanup: keep only fingerprints from the last MAX_BUFFER_MINUTES
                 val cutoffTime = System.currentTimeMillis() - (MAX_BUFFER_MINUTES * 60 * 1000)
-                val allLocal = adminDir.listFiles { f -> f.name.startsWith(filePrefix) && f.name.endsWith(".json") }?.toList() ?: emptyList()
+                Log.d("MainViewModel", "Cleaning up files older than: ${java.text.SimpleDateFormat("HH-mm-ss", Locale.getDefault()).format(java.util.Date(cutoffTime))}")
+                val allLocal = fingerprintsDir.listFiles { f -> f.name.startsWith(filePrefix) && f.name.endsWith(".json") }?.toList() ?: emptyList()
+                Log.d("MainViewModel", "Found ${allLocal.size} local files to check for cleanup")
                 for (file in allLocal) {
-                    val timestamp = Regex("AppFingerprint_(\\d+)_\\d+s\\.json").find(file.name)?.groupValues?.getOrNull(1)?.toLongOrNull()
+                    val timestamp = Regex("(\\d{2}-\\d{2}-\\d{2})_AppFingerprint_\\d+s\\.json").find(file.name)?.groupValues?.getOrNull(1)?.let { dateStr ->
+                        try {
+                            val parts = dateStr.split("-")
+                            val calendar = java.util.Calendar.getInstance().apply {
+                                set(java.util.Calendar.HOUR_OF_DAY, parts[0].toInt())
+                                set(java.util.Calendar.MINUTE, parts[1].toInt())
+                                set(java.util.Calendar.SECOND, parts[2].toInt())
+                                set(java.util.Calendar.MILLISECOND, 0)
+                            }
+                            calendar.timeInMillis
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
                     if (timestamp != null && timestamp < cutoffTime) {
                         try {
                             file.delete()
@@ -171,15 +191,30 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 // Upload to Firebase Storage with prefix
-                val fingerprintRef = storageRef.child("incoming_fingerprints/${fileName}")
+                val fingerprintRef = storageRef.child("fingerprints/${fileName}")
                 fingerprintRef.putBytes(jsonContent.toByteArray()).await()
                 Log.d("MainViewModel", "Fingerprint uploaded to Firebase: $fileName")
 
                 // Firebase cleanup: keep only fingerprints from the last MAX_BUFFER_MINUTES
-                val firebaseFiles = storageRef.child("incoming_fingerprints").listAll().await().items
+                Log.d("MainViewModel", "Starting Firebase cleanup for files older than: ${java.text.SimpleDateFormat("HH-mm-ss", Locale.getDefault()).format(java.util.Date(cutoffTime))}")
+                val firebaseFiles = storageRef.child("fingerprints").listAll().await().items
                     .filter { it.name.startsWith(filePrefix) && it.name.endsWith(".json") }
+                Log.d("MainViewModel", "Found ${firebaseFiles.size} Firebase files to check for cleanup")
                 for (file in firebaseFiles) {
-                    val timestamp = Regex("AppFingerprint_(\\d+)_\\d+s\\.json").find(file.name)?.groupValues?.getOrNull(1)?.toLongOrNull()
+                    val timestamp = Regex("(\\d{2}-\\d{2}-\\d{2})_AppFingerprint_\\d+s\\.json").find(file.name)?.groupValues?.getOrNull(1)?.let { dateStr ->
+                        try {
+                            val parts = dateStr.split("-")
+                            val calendar = java.util.Calendar.getInstance().apply {
+                                set(java.util.Calendar.HOUR_OF_DAY, parts[0].toInt())
+                                set(java.util.Calendar.MINUTE, parts[1].toInt())
+                                set(java.util.Calendar.SECOND, parts[2].toInt())
+                                set(java.util.Calendar.MILLISECOND, 0)
+                            }
+                            calendar.timeInMillis
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
                     if (timestamp != null && timestamp < cutoffTime) {
                         try {
                             file.delete().await()

@@ -13,7 +13,7 @@ from collections import deque
 from dotenv import load_dotenv
 
 # --- CONFIGURATION ---
-RECORDING_INTERVAL = 10  # seconds
+RECORDING_INTERVAL = 7 # seconds
 BUFFER_MINUTES = 3      # Keep 3 minutes of fingerprints
 SAMPLE_RATE = 8000      # Hz
 CHANNELS = 1           # mono
@@ -218,8 +218,12 @@ class RadioStreamRecorder:
             # Convert to JSON
             json_data = json.dumps(data)
             
+            # Format timestamp as HH-mm-ss
+            dt = datetime.fromtimestamp(timestamp)
+            time_str = dt.strftime("%H-%M-%S")
+            filename = f"{time_str}_LiveStreamFingerprint_{self.station_name}_{RECORDING_INTERVAL}s.json"
+            
             # Upload to Firebase Storage
-            filename = f"LiveStreamFingerprint_{timestamp}_{self.station_name}.json"
             blob = bucket.blob(f"fingerprints/{filename}")
             blob.upload_from_string(json_data, content_type='application/json')
             blob.content_disposition = f'attachment; filename="{filename}"'
@@ -244,20 +248,26 @@ class RadioStreamRecorder:
     def _cleanup_old_fingerprints(self):
         """Clean up fingerprints older than BUFFER_MINUTES"""
         try:
-            # List all reference fingerprints
-            blobs = bucket.list_blobs(prefix="reference_fingerprints/")
+            # List all fingerprints in the unified folder
+            blobs = bucket.list_blobs(prefix="fingerprints/")
             current_time = time.time()
             
             for blob in blobs:
                 try:
                     # Extract timestamp from filename
                     filename = blob.name.split('/')[-1]
-                    timestamp = float(filename.split('_')[0])
+                    # Extract timestamp from <HH-mm-ss>_LiveStreamFingerprint_<station>_<interval>s.json
+                    time_str = filename.split('_')[0]  # Get mm-ss part
+                    hh, mm, ss = map(int, time_str.split('-'))
+                    # Create a datetime for today with the extracted minutes and seconds
+                    now = datetime.now()
+                    dt = now.replace(hour=hh, minute=mm, second=ss, microsecond=0)
+                    timestamp = int(dt.timestamp())
                     
                     # Delete if older than buffer time
                     if current_time - timestamp > BUFFER_MINUTES * 60:
                         blob.delete()
-                        logger.info(f"Deleted old fingerprint: {filename}")
+                        logger.info(f"Deleted old fingerprint: {blob.name}")
                         
                 except Exception as e:
                     logger.error(f"Error processing blob {blob.name}: {str(e)}")
