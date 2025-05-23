@@ -25,19 +25,23 @@ if not exist fingerprint_matcher.py (
     exit /b 1
 )
 
-:: Start reference recorder in a new window
+:: Run the fingerprint indexer in this window (quick summary)
+echo Indexing fingerprints...
+python fingerprint_indexer.py --index --root "../ADMIN DO NOT COMMIT/fingerprints/"
+
+:: Start reference recorder in a minimized window
 echo Starting Reference Recorder...
-start "Radiolytics Reference Recorder" cmd /k "python reference_recorder.py"
+start /min "Radiolytics Reference Recorder" cmd /k "python reference_recorder.py"
 
 :: Wait a moment to ensure first window opens
 timeout /t 2 /nobreak >nul
 
-:: Start fingerprint matcher in a new window
+:: Start fingerprint matcher in a minimized window
 echo Starting Fingerprint Matcher...
-start "Radiolytics Fingerprint Matcher" cmd /k "python fingerprint_matcher.py"
+start /min "Radiolytics Fingerprint Matcher" cmd /k "python fingerprint_matcher.py --run-matcher"
 
 echo.
-echo Both services have been started in separate windows.
+echo Services have been started in separate windows (minimized).
 echo This window will stay open to monitor the services.
 echo Press Ctrl+C to close this window (the service windows will remain open).
 echo.

@@ -123,12 +123,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val readableTimestamp = dateFormat.format(java.util.Date(timestamp))
                 val filePrefix = "AppFingerprint_"
                 val fileName = "${readableTimestamp}_${filePrefix}${RECORDING_INTERVAL_MS/1000}s.json"
-                // Use absolute path for local storage
-                val adminDir = File("/storage/emulated/0/Android/data/com.example.radiolytics/files/ADMIN DO NOT COMMIT")
-                if (!adminDir.exists()) adminDir.mkdirs()
-                val fingerprintsDir = File(adminDir, "fingerprints")
-                if (!fingerprintsDir.exists()) fingerprintsDir.mkdirs()
-                val localFile = File(fingerprintsDir, fileName)
 
                 // Generate a unique device ID if not exists
                 val deviceId = android.provider.Settings.Secure.getString(
@@ -156,46 +150,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 """.trimIndent()
 
-                // Save locally
-                FileOutputStream(localFile).use { it.write(jsonContent.toByteArray()) }
-                Log.d("MainViewModel", "Saved fingerprint locally: ${localFile.absolutePath}")
-
-                // Local cleanup: keep only fingerprints from the last MAX_BUFFER_MINUTES
-                val cutoffTime = System.currentTimeMillis() - (MAX_BUFFER_MINUTES * 60 * 1000)
-                Log.d("MainViewModel", "Cleaning up files older than: ${java.text.SimpleDateFormat("HH-mm-ss", Locale.getDefault()).format(java.util.Date(cutoffTime))}")
-                val allLocal = fingerprintsDir.listFiles { f -> f.name.startsWith(filePrefix) && f.name.endsWith(".json") }?.toList() ?: emptyList()
-                Log.d("MainViewModel", "Found ${allLocal.size} local files to check for cleanup")
-                for (file in allLocal) {
-                    val timestamp = Regex("(\\d{2}-\\d{2}-\\d{2})_AppFingerprint_\\d+s\\.json").find(file.name)?.groupValues?.getOrNull(1)?.let { dateStr ->
-                        try {
-                            val parts = dateStr.split("-")
-                            val calendar = java.util.Calendar.getInstance().apply {
-                                set(java.util.Calendar.HOUR_OF_DAY, parts[0].toInt())
-                                set(java.util.Calendar.MINUTE, parts[1].toInt())
-                                set(java.util.Calendar.SECOND, parts[2].toInt())
-                                set(java.util.Calendar.MILLISECOND, 0)
-                            }
-                            calendar.timeInMillis
-                        } catch (e: Exception) {
-                            null
-                        }
-                    }
-                    if (timestamp != null && timestamp < cutoffTime) {
-                        try {
-                            file.delete()
-                            Log.d("MainViewModel", "Deleted old local fingerprint: ${file.name}")
-                        } catch (e: Exception) {
-                            Log.e("MainViewModel", "Failed to delete local file: ${file.name}", e)
-                        }
-                    }
-                }
-
-                // Upload to Firebase Storage with prefix
+                // Upload to Firebase Storage with content type only
                 val fingerprintRef = storageRef.child("fingerprints/${fileName}")
-                fingerprintRef.putBytes(jsonContent.toByteArray()).await()
+                val metadata = com.google.firebase.storage.StorageMetadata.Builder()
+                    .setContentType("application/json")
+                    .build()
+                fingerprintRef.putBytes(jsonContent.toByteArray(), metadata).await()
                 Log.d("MainViewModel", "Fingerprint uploaded to Firebase: $fileName")
+                // Optionally log the download URL for debugging
+                val downloadUrl = fingerprintRef.downloadUrl.await()
+                Log.d("MainViewModel", "Download URL: $downloadUrl")
 
                 // Firebase cleanup: keep only fingerprints from the last MAX_BUFFER_MINUTES
+                val cutoffTime = System.currentTimeMillis() - (MAX_BUFFER_MINUTES * 60 * 1000)
                 Log.d("MainViewModel", "Starting Firebase cleanup for files older than: ${java.text.SimpleDateFormat("HH-mm-ss", Locale.getDefault()).format(java.util.Date(cutoffTime))}")
                 val firebaseFiles = storageRef.child("fingerprints").listAll().await().items
                     .filter { it.name.startsWith(filePrefix) && it.name.endsWith(".json") }
@@ -254,13 +221,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val matchedAt = snapshot.getLong("matched_at") ?: 0L
                 val distance = snapshot.getLong("distance") ?: -1L
                 val matchTimestamp = snapshot.getLong("match_timestamp") ?: 0L
+                val debugLog = snapshot.getString("debug_log") ?: ""
                 
                 // Format the time for better readability
                 val dateFormat = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
                 val matchedTimeStr = dateFormat.format(java.util.Date(matchedAt))
                 val matchTimeStr = dateFormat.format(java.util.Date(matchTimestamp))
                 
-                val resultText = "Matched: $station (${(confidence * 100).toInt()}%) | Distance: $distance | Matched at: $matchedTimeStr | Stream time: $matchTimeStr"
+                val resultText = "Matched: $station (${(confidence * 100).toInt()}%) | Distance: $distance | Matched at: $matchedTimeStr | Stream time: $matchTimeStr\n\n$debugLog"
                 _result.value = resultText
                 
                 // Remove listener after getting result

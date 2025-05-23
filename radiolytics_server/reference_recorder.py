@@ -42,7 +42,8 @@ firebase_admin.initialize_app(cred, {
 bucket = storage.bucket()
 
 # Update all local fingerprint file output to use FINGERPRINT_OUTPUT_PATH from .env
-FINGERPRINT_OUTPUT_PATH = os.getenv("FINGERPRINT_OUTPUT_PATH", "ADMIN DO NOT COMMIT/fingerprints/")
+FINGERPRINT_OUTPUT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fingerprints")
+logger.info(f"Using fingerprint output path: {FINGERPRINT_OUTPUT_PATH}")
 
 class RadioStreamRecorder:
     def __init__(self, stream_url, station_name, headers=None):

@@ -26,15 +26,16 @@ android {
     }
     
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
     }
     
     buildFeatures {
+        buildConfig false
         viewBinding true
         compose true
     }
@@ -55,10 +56,11 @@ dependencies {
     
     // Firebase
     implementation platform('com.google.firebase:firebase-bom:32.7.2')
-    implementation 'com.google.firebase:firebase-analytics-ktx'
+    implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.firebase:firebase-firestore'
+    implementation 'com.google.firebase:firebase-storage'
     implementation 'com.google.firebase:firebase-appcheck-playintegrity'
-    implementation 'com.google.firebase:firebase-firestore-ktx'
-    implementation 'com.google.firebase:firebase-storage-ktx'
+    implementation 'com.google.firebase:firebase-appcheck-debug'
     
     // JTransforms for FFT
     implementation 'com.github.wendykierp:JTransforms:3.1'

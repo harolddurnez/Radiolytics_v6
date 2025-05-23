@@ -79,7 +79,7 @@ class AudioFingerprinter {
         // RMS
         val rms = kotlin.math.sqrt(floatFrame.map { it * it }.average()).toFloat()
         // Energy
-        val energy = floatFrame.map { it * it }.sum().toFloat()
+        val energy = floatFrame.map { it * it }.average().toFloat() // mean(x^2)
         // Spectral centroid
         val fft = DoubleArray(FRAME_SIZE)
         for (i in floatFrame.indices) fft[i] = floatFrame[i].toDouble()
