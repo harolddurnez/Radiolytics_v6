@@ -10,6 +10,7 @@ import ffmpeg
 import tempfile
 import os
 from collections import deque
+import json
 
 class RadioStreamCapture:
     def __init__(self, stream_url, station_name, headers=None, buffer_seconds=60):
@@ -23,18 +24,14 @@ class RadioStreamCapture:
         self.audio = pyaudio.PyAudio()
         
         # Audio parameters (matching Android app)
-        self.SAMPLE_RATE = 44100
+        self.SAMPLE_RATE = 8000
+        self.FRAME_SIZE = 512
+        self.FRAME_OVERLAP = 256
         self.CHANNELS = 1
-        self.CHUNK_SIZE = 4096
-        self.FFT_SIZE = 2048
-        self.MIN_FREQ = 30
-        self.MAX_FREQ = 3000
-        self.PEAK_THRESHOLD = 0.1
-        self.FINGERPRINT_SIZE = 32
+        self.CHUNK_SIZE = self.FRAME_SIZE
         
         # FFT setup
-        self.fft = np.fft.fft
-        self.window = np.hanning(self.FFT_SIZE)
+        self.window = np.hanning(self.FRAME_SIZE)
         
         # Create a temporary directory for audio processing
         self.temp_dir = tempfile.mkdtemp()
@@ -95,9 +92,9 @@ class RadioStreamCapture:
             return None
 
     def _capture_loop(self):
+        target_samples = self.SAMPLE_RATE * 7  # 7 seconds, or use self.buffer_seconds if variable
         while self.is_running:
             try:
-                # Stream the audio using requests with headers
                 response = requests.get(self.stream_url, stream=True, headers=self.headers)
                 if response.status_code != 200:
                     self.logger.error(f"Failed to connect to stream: {response.status_code}")
@@ -105,87 +102,109 @@ class RadioStreamCapture:
                     continue
 
                 buffer = BytesIO()
+                total_samples = 0
+                aac_data_accum = bytearray()
+                start_time = time.time()
+                last_log_time = start_time
                 for chunk in response.iter_content(chunk_size=self.CHUNK_SIZE):
+                    now = time.time()
                     if not self.is_running:
+                        self.logger.warning(f"[{self.station_name}] Capture loop stopped externally.")
                         break
-                        
-                    if chunk:
-                        buffer.write(chunk)
-                        
-                        if buffer.tell() >= self.CHUNK_SIZE * 2:  # Buffer more data for AAC conversion
-                            # Process the audio chunk
-                            buffer.seek(0)
-                            aac_data = buffer.read()
-                            
-                            # Convert AAC to WAV
-                            wav_data = self._convert_aac_to_wav(aac_data)
-                            if wav_data:
-                                # Convert to float32 array
-                                audio_data = np.frombuffer(wav_data[44:], dtype=np.int16).astype(np.float32) / 32768.0
-                                fingerprint = self._process_audio_chunk(audio_data)
-                                
-                                if fingerprint is not None:
-                                    timestamp = int(time.time() * 1000)
-                                    self._add_fingerprint(fingerprint, timestamp)
-                            
-                            buffer = BytesIO()
-
-                # If we get here, the stream ended
-                self.logger.warning(f"Stream ended for {self.station_name}, attempting to reconnect...")
-                time.sleep(5)
-
+                    if not chunk:
+                        self.logger.warning(f"[{self.station_name}] Empty chunk received at {now - start_time:.2f}s.")
+                        continue
+                    buffer.write(chunk)
+                    aac_data_accum.extend(chunk)
+                    # Try to estimate how many PCM samples we have so far
+                    wav_data = self._convert_aac_to_wav(aac_data_accum)
+                    if wav_data:
+                        audio_data = np.frombuffer(wav_data[44:], dtype=np.int16).astype(np.float32) / 32768.0
+                        total_samples = len(audio_data)
+                        if now - last_log_time > 1 or total_samples >= target_samples:
+                            self.logger.info(f"[{self.station_name}] Buffer: {total_samples} samples, {len(aac_data_accum)} bytes AAC, {now - start_time:.2f}s elapsed.")
+                            last_log_time = now
+                        if total_samples >= target_samples:
+                            break
+                    else:
+                        self.logger.warning(f"[{self.station_name}] ffmpeg decode failed at {now - start_time:.2f}s, {len(aac_data_accum)} bytes AAC.")
+                    if now - start_time > 30:  # Increased timeout to 30s
+                        self.logger.warning(f"[{self.station_name}] Timeout: could not accumulate enough samples after 30s.")
+                        break
+                # Final conversion and processing
+                wav_data = self._convert_aac_to_wav(aac_data_accum)
+                if wav_data:
+                    audio_data = np.frombuffer(wav_data[44:], dtype=np.int16).astype(np.float32) / 32768.0
+                    if len(audio_data) < target_samples:
+                        self.logger.warning(f"[{self.station_name}] Stream ended early: only {len(audio_data)} samples, padding to {target_samples}.")
+                        audio_data = np.pad(audio_data, (0, target_samples - len(audio_data)))
+                    elif len(audio_data) > target_samples:
+                        audio_data = audio_data[:target_samples]
+                    frames = self._process_audio_chunk(audio_data)
+                    if frames:
+                        # Log number of valid frames
+                        fp_np = np.array(frames)
+                        valid_mask = np.logical_and(np.any(fp_np[:, :3] != 0, axis=1), fp_np[:, 3] > -150)
+                        num_valid = int(np.sum(valid_mask))
+                        self.logger.info(f"[{self.station_name}] SAVED: {num_valid} valid frames out of {len(frames)}")
+                        timestamp = int(time.time() * 1000)
+                        self._add_fingerprint(frames, timestamp)
+                else:
+                    self.logger.error(f"[{self.station_name}] Could not convert accumulated AAC to WAV.")
+                # Wait before next reference
+                time.sleep(self.buffer_seconds)
             except Exception as e:
                 self.logger.error(f"Error in capture loop: {str(e)}")
                 time.sleep(5)  # Wait before retrying
 
     def _process_audio_chunk(self, audio_data):
-        try:
-            # Apply window function
-            windowed = audio_data[:self.FFT_SIZE] * self.window
-            
-            # Pad if necessary
-            if len(windowed) < self.FFT_SIZE:
-                windowed = np.pad(windowed, (0, self.FFT_SIZE - len(windowed)))
-            
-            # Perform FFT
-            fft_result = self.fft(windowed)
-            magnitudes = np.abs(fft_result[:self.FFT_SIZE//2])
-            
-            # Normalize magnitudes to [0,1] range
-            if np.max(magnitudes) > 0:
-                magnitudes = magnitudes / np.max(magnitudes)
-            
-            # Find peaks
-            peaks = []
-            for i, magnitude in enumerate(magnitudes):
-                freq = i * self.SAMPLE_RATE / self.FFT_SIZE
-                if self.MIN_FREQ <= freq <= self.MAX_FREQ and magnitude > self.PEAK_THRESHOLD:
-                    # Store normalized frequency bin (0-1 range)
-                    normalized_bin = i / (self.FFT_SIZE // 2)
-                    peaks.append((normalized_bin, magnitude))
-            
-            # Sort by magnitude and take top peaks
-            peaks.sort(key=lambda x: x[1], reverse=True)
-            top_peaks = peaks[:self.FINGERPRINT_SIZE]
-            
-            # Create fingerprint - store normalized frequency bins
-            fingerprint = bytearray(self.FINGERPRINT_SIZE)
-            for i, (norm_bin, _) in enumerate(top_peaks):
-                # Convert normalized bin (0-1) to byte (0-255)
-                fingerprint[i] = int(norm_bin * 255)
-            
-            return bytes(fingerprint)
-            
-        except Exception as e:
-            self.logger.error(f"Error processing audio chunk: {str(e)}")
-            return None
+        # Split audio into overlapping frames and extract 4D features per frame
+        frames = []
+        step = self.FRAME_SIZE - self.FRAME_OVERLAP
+        for start in range(0, len(audio_data) - self.FRAME_SIZE + 1, step):
+            frame = audio_data[start:start+self.FRAME_SIZE]
+            if len(frame) < self.FRAME_SIZE:
+                continue
+            # Windowing
+            float_frame = frame * self.window
+            # RMS
+            rms = np.sqrt(np.mean(float_frame ** 2)).astype(np.float32)
+            # Energy
+            energy = np.mean(float_frame ** 2).astype(np.float32)
+            # FFT for centroid
+            fft = np.fft.rfft(float_frame)
+            magnitudes = np.abs(fft)
+            freqs = np.fft.rfftfreq(self.FRAME_SIZE, 1.0 / self.SAMPLE_RATE)
+            mag_sum = np.sum(magnitudes) if np.sum(magnitudes) > 0 else 1.0
+            centroid = (np.sum(freqs * magnitudes) / mag_sum).astype(np.float32)
+            norm_centroid = centroid / (self.SAMPLE_RATE / 2.0)
+            # dB
+            db = 20 * np.log10(rms + 1e-10)
+            # Match app normalization
+            norm_rms = rms
+            norm_energy = energy / self.FRAME_SIZE
+            norm_db = db.astype(np.float32)
+            frames.append([float(norm_rms), float(norm_centroid), float(norm_energy), float(norm_db)])
+        return frames
 
-    def _add_fingerprint(self, fingerprint, timestamp):
-        self.fingerprints.append((timestamp, fingerprint))
+    def _add_fingerprint(self, frames, timestamp):
+        self.fingerprints.append((timestamp, frames))
         # Remove old fingerprints
         cutoff = int(time.time() * 1000) - self.buffer_seconds * 1000
         while self.fingerprints and self.fingerprints[0][0] < cutoff:
             self.fingerprints.popleft()
+        # Save to JSON (match app format)
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        out_path = os.path.join(project_root, 'LOGGING', 'fingerprints')
+        os.makedirs(out_path, exist_ok=True)
+        filename = f"{time.strftime('%H-%M-%S')}_LiveStreamFingerprint_{self.station_name}_7s.json"
+        with open(os.path.join(out_path, filename), 'w', encoding='utf-8') as f:
+            json.dump({
+                "fingerprint": frames,
+                "timestamp": timestamp,
+                "station": self.station_name
+            }, f)
+        self.logger.info(f"Saved reference fingerprint locally at {os.path.join(out_path, filename)}")
 
     def get_fingerprints(self):
         """Return a copy of the current fingerprints buffer"""

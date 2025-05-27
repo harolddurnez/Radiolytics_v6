@@ -1,13 +1,414 @@
-=== Log Cleared for New Run ===
-2025-05-27 15:09:21,273 - __main__ - INFO - Saved fingerprint for Smile FM at 1748351358 - Public URL: https://storage.googleapis.com/newbuckettest.firebasestorage.app/fingerprints/15-09-18_LiveStreamFingerprint_Smile%20FM_7s.json
-2025-05-27 15:09:21,274 - __main__ - INFO - Saved reference fingerprint locally at D:\_WORK\Radiolytics\LOGGING\fingerprints\15-09-18_LiveStreamFingerprint_Smile FM_7s.json
-2025-05-27 15:09:22,784 - __main__ - INFO - Saved fingerprint for KFM at 1748351358 - Public URL: https://storage.googleapis.com/newbuckettest.firebasestorage.app/fingerprints/15-09-18_LiveStreamFingerprint_KFM_7s.json
-2025-05-27 15:09:22,786 - __main__ - INFO - Saved reference fingerprint locally at D:\_WORK\Radiolytics\LOGGING\fingerprints\15-09-18_LiveStreamFingerprint_KFM_7s.json
-2025-05-27 15:09:38,647 - __main__ - INFO - Saved fingerprint for KFM at 1748351377 - Public URL: https://storage.googleapis.com/newbuckettest.firebasestorage.app/fingerprints/15-09-37_LiveStreamFingerprint_KFM_7s.json
-2025-05-27 15:09:38,648 - __main__ - INFO - Saved reference fingerprint locally at D:\_WORK\Radiolytics\LOGGING\fingerprints\15-09-37_LiveStreamFingerprint_KFM_7s.json
-2025-05-27 15:09:38,677 - __main__ - INFO - Saved fingerprint for Smile FM at 1748351375 - Public URL: https://storage.googleapis.com/newbuckettest.firebasestorage.app/fingerprints/15-09-35_LiveStreamFingerprint_Smile%20FM_7s.json
-2025-05-27 15:09:38,678 - __main__ - INFO - Saved reference fingerprint locally at D:\_WORK\Radiolytics\LOGGING\fingerprints\15-09-35_LiveStreamFingerprint_Smile FM_7s.json
-2025-05-27 15:09:54,948 - __main__ - INFO - Saved fingerprint for Smile FM at 1748351393 - Public URL: https://storage.googleapis.com/newbuckettest.firebasestorage.app/fingerprints/15-09-53_LiveStreamFingerprint_Smile%20FM_7s.json
-2025-05-27 15:09:54,949 - __main__ - INFO - Saved reference fingerprint locally at D:\_WORK\Radiolytics\LOGGING\fingerprints\15-09-53_LiveStreamFingerprint_Smile FM_7s.json
-2025-05-27 15:09:56,585 - __main__ - INFO - Saved fingerprint for KFM at 1748351393 - Public URL: https://storage.googleapis.com/newbuckettest.firebasestorage.app/fingerprints/15-09-53_LiveStreamFingerprint_KFM_7s.json
-2025-05-27 15:09:56,586 - __main__ - INFO - Saved reference fingerprint locally at D:\_WORK\Radiolytics\LOGGING\fingerprints\15-09-53_LiveStreamFingerprint_KFM_7s.json
+2025-05-27 19:40:50,253 - __main__ - INFO - Using fingerprint output path: D:\_WORK\Radiolytics\LOGGING\fingerprints
+2025-05-27 19:40:50,254 - __main__ - INFO - Initialized recorder for Smile FM with 140 frames per recording
+2025-05-27 19:40:50,255 - __main__ - INFO - Started recording Smile FM
+2025-05-27 19:40:50,255 - __main__ - INFO - Started recorder for Smile FM
+2025-05-27 19:40:50,256 - __main__ - INFO - Initialized recorder for KFM with 140 frames per recording
+2025-05-27 19:40:50,257 - __main__ - INFO - [KFM] Using ffmpeg-based fallback pipeline for audio capture.
+2025-05-27 19:40:50,257 - __main__ - INFO - Started recording KFM
+2025-05-27 19:40:50,257 - __main__ - INFO - Started recorder for KFM
+2025-05-27 19:40:50,257 - __main__ - ERROR - [KFM] FFMPEG fallback error: No module named 'radiolytics_server'
+2025-05-27 19:40:51,501 - __main__ - INFO - [Smile FM] Chunk 1: size=512 buffer_size=512
+2025-05-27 19:40:51,501 - __main__ - INFO - [Smile FM] Stopping capture loop. is_running=True, chunk=None
+2025-05-27 19:40:51,502 - __main__ - INFO - [Smile FM] Finished capture: 1 chunks, 256 samples.
+2025-05-27 19:40:51,502 - __main__ - INFO - [Smile FM] Audio data after padding: [-0.10940552 -0.9975586   0.00997925  0.25891113 -0.34295654 -0.57211304
+  0.77767944  0.69143677 -0.5710449   0.08666992] ... (total 56000)
+2025-05-27 19:40:51,506 - __main__ - INFO - Feature stats for Smile FM fingerprint: {"RMS": {"mean": 0.0029306703380176, "min": 0.0, "max": 0.410293847322464}, "Centroid": {"mean": 0.0035148747432394915, "min": 0.0, "max": 0.4920824640535288}, "Energy": {"mean": 0.0017638819558279855, "min": 0.0, "max": 0.24694347381591797}, "dB": {"mean": -154.34098642553602, "min": -200.0, "max": 0.0}}
+2025-05-27 19:40:51,506 - __main__ - INFO - Valid frames for Smile FM fingerprint: 1 / 140
+2025-05-27 19:40:51,507 - __main__ - WARNING - UNHEALTHY: Smile FM reference extraction: only 1 valid frames out of 140
+2025-05-27 19:40:53,735 - __main__ - INFO - [KFM] Chunk 1: size=512 buffer_size=512
+2025-05-27 19:40:53,735 - __main__ - INFO - [KFM] Chunk 2: size=512 buffer_size=1024
+2025-05-27 19:40:53,735 - __main__ - INFO - [KFM] Chunk 3: size=512 buffer_size=1536
+2025-05-27 19:40:53,736 - __main__ - INFO - [KFM] Chunk 4: size=512 buffer_size=2048
+2025-05-27 19:40:53,744 - __main__ - INFO - [KFM] Chunk 5: size=512 buffer_size=2560
+2025-05-27 19:40:53,744 - __main__ - INFO - [KFM] Chunk 6: size=512 buffer_size=3072
+2025-05-27 19:40:53,744 - __main__ - INFO - [KFM] Chunk 7: size=512 buffer_size=3584
+2025-05-27 19:40:53,744 - __main__ - INFO - [KFM] Chunk 8: size=512 buffer_size=4096
+2025-05-27 19:40:53,745 - __main__ - INFO - [KFM] Chunk 9: size=512 buffer_size=4608
+2025-05-27 19:40:53,754 - __main__ - INFO - [KFM] Chunk 10: size=512 buffer_size=5120
+2025-05-27 19:40:53,755 - __main__ - INFO - [KFM] Chunk 11: size=512 buffer_size=5632
+2025-05-27 19:40:53,755 - __main__ - INFO - [KFM] Chunk 12: size=512 buffer_size=6144
+2025-05-27 19:40:53,756 - __main__ - INFO - [KFM] Chunk 13: size=512 buffer_size=6656
+2025-05-27 19:40:53,765 - __main__ - INFO - [KFM] Chunk 14: size=512 buffer_size=7168
+2025-05-27 19:40:53,766 - __main__ - INFO - [KFM] Chunk 15: size=512 buffer_size=7680
+2025-05-27 19:40:53,766 - __main__ - INFO - [KFM] Chunk 16: size=512 buffer_size=8192
+2025-05-27 19:40:53,766 - __main__ - INFO - [KFM] Chunk 17: size=512 buffer_size=8704
+2025-05-27 19:40:53,766 - __main__ - INFO - [KFM] Chunk 18: size=512 buffer_size=9216
+2025-05-27 19:40:53,775 - __main__ - INFO - [KFM] Chunk 19: size=512 buffer_size=9728
+2025-05-27 19:40:53,776 - __main__ - INFO - [KFM] Chunk 20: size=512 buffer_size=10240
+2025-05-27 19:40:53,776 - __main__ - INFO - [KFM] Chunk 21: size=512 buffer_size=10752
+2025-05-27 19:40:53,776 - __main__ - INFO - [KFM] Chunk 22: size=512 buffer_size=11264
+2025-05-27 19:40:53,785 - __main__ - INFO - [KFM] Chunk 23: size=512 buffer_size=11776
+2025-05-27 19:40:53,785 - __main__ - INFO - [KFM] Chunk 24: size=512 buffer_size=12288
+2025-05-27 19:40:53,786 - __main__ - INFO - [KFM] Chunk 25: size=512 buffer_size=12800
+2025-05-27 19:40:53,786 - __main__ - INFO - [KFM] Chunk 26: size=512 buffer_size=13312
+2025-05-27 19:40:53,786 - __main__ - INFO - [KFM] Chunk 27: size=512 buffer_size=13824
+2025-05-27 19:40:53,796 - __main__ - INFO - [KFM] Chunk 28: size=512 buffer_size=14336
+2025-05-27 19:40:53,796 - __main__ - INFO - [KFM] Chunk 29: size=512 buffer_size=14848
+2025-05-27 19:40:53,796 - __main__ - INFO - [KFM] Chunk 30: size=512 buffer_size=15360
+2025-05-27 19:40:53,796 - __main__ - INFO - [KFM] Chunk 31: size=512 buffer_size=15872
+2025-05-27 19:40:53,883 - __main__ - INFO - [KFM] Chunk 32: size=512 buffer_size=16384
+2025-05-27 19:40:53,883 - __main__ - INFO - [KFM] Chunk 33: size=512 buffer_size=16896
+2025-05-27 19:40:53,883 - __main__ - INFO - [KFM] Chunk 34: size=512 buffer_size=17408
+2025-05-27 19:40:53,884 - __main__ - INFO - [KFM] Chunk 35: size=512 buffer_size=17920
+2025-05-27 19:40:53,884 - __main__ - INFO - [KFM] Chunk 36: size=512 buffer_size=18432
+2025-05-27 19:40:53,888 - __main__ - INFO - [KFM] Chunk 37: size=512 buffer_size=18944
+2025-05-27 19:40:53,888 - __main__ - INFO - [KFM] Chunk 38: size=512 buffer_size=19456
+2025-05-27 19:40:53,889 - __main__ - INFO - [KFM] Chunk 39: size=512 buffer_size=19968
+2025-05-27 19:40:53,889 - __main__ - INFO - [KFM] Chunk 40: size=512 buffer_size=20480
+2025-05-27 19:40:53,899 - __main__ - INFO - [KFM] Chunk 41: size=512 buffer_size=20992
+2025-05-27 19:40:53,899 - __main__ - INFO - [KFM] Chunk 42: size=512 buffer_size=21504
+2025-05-27 19:40:53,899 - __main__ - INFO - [KFM] Chunk 43: size=512 buffer_size=22016
+2025-05-27 19:40:53,899 - __main__ - INFO - [KFM] Chunk 44: size=512 buffer_size=22528
+2025-05-27 19:40:53,899 - __main__ - INFO - [KFM] Chunk 45: size=512 buffer_size=23040
+2025-05-27 19:40:53,910 - __main__ - INFO - [KFM] Chunk 46: size=512 buffer_size=23552
+2025-05-27 19:40:53,910 - __main__ - INFO - [KFM] Chunk 47: size=512 buffer_size=24064
+2025-05-27 19:40:53,910 - __main__ - INFO - [KFM] Chunk 48: size=512 buffer_size=24576
+2025-05-27 19:40:53,910 - __main__ - INFO - [KFM] Chunk 49: size=512 buffer_size=25088
+2025-05-27 19:40:53,920 - __main__ - INFO - [KFM] Chunk 50: size=512 buffer_size=25600
+2025-05-27 19:40:53,920 - __main__ - INFO - [KFM] Chunk 51: size=512 buffer_size=26112
+2025-05-27 19:40:53,921 - __main__ - INFO - [KFM] Chunk 52: size=512 buffer_size=26624
+2025-05-27 19:40:53,921 - __main__ - INFO - [KFM] Chunk 53: size=512 buffer_size=27136
+2025-05-27 19:40:53,931 - __main__ - INFO - [KFM] Chunk 54: size=512 buffer_size=27648
+2025-05-27 19:40:53,932 - __main__ - INFO - [KFM] Chunk 55: size=512 buffer_size=28160
+2025-05-27 19:40:53,932 - __main__ - INFO - [KFM] Chunk 56: size=512 buffer_size=28672
+2025-05-27 19:40:53,936 - __main__ - INFO - [KFM] Chunk 57: size=512 buffer_size=29184
+2025-05-27 19:40:53,936 - __main__ - INFO - [KFM] Chunk 58: size=512 buffer_size=29696
+2025-05-27 19:40:53,937 - __main__ - INFO - [KFM] Chunk 59: size=512 buffer_size=30208
+2025-05-27 19:40:53,937 - __main__ - INFO - [KFM] Chunk 60: size=512 buffer_size=30720
+2025-05-27 19:40:53,946 - __main__ - INFO - [KFM] Chunk 61: size=512 buffer_size=31232
+2025-05-27 19:40:53,946 - __main__ - INFO - [KFM] Chunk 62: size=512 buffer_size=31744
+2025-05-27 19:40:53,946 - __main__ - INFO - [KFM] Chunk 63: size=512 buffer_size=32256
+2025-05-27 19:40:53,947 - __main__ - INFO - [KFM] Chunk 64: size=512 buffer_size=32768
+2025-05-27 19:40:53,947 - __main__ - INFO - [KFM] Chunk 65: size=512 buffer_size=33280
+2025-05-27 19:40:53,957 - __main__ - INFO - [KFM] Chunk 66: size=512 buffer_size=33792
+2025-05-27 19:40:53,957 - __main__ - INFO - [KFM] Chunk 67: size=512 buffer_size=34304
+2025-05-27 19:40:53,957 - __main__ - INFO - [KFM] Chunk 68: size=512 buffer_size=34816
+2025-05-27 19:40:53,957 - __main__ - INFO - [KFM] Chunk 69: size=512 buffer_size=35328
+2025-05-27 19:40:53,966 - __main__ - INFO - [KFM] Chunk 70: size=512 buffer_size=35840
+2025-05-27 19:40:53,966 - __main__ - INFO - [KFM] Chunk 71: size=512 buffer_size=36352
+2025-05-27 19:40:53,966 - __main__ - INFO - [KFM] Chunk 72: size=512 buffer_size=36864
+2025-05-27 19:40:53,966 - __main__ - INFO - [KFM] Chunk 73: size=512 buffer_size=37376
+2025-05-27 19:40:53,967 - __main__ - INFO - [KFM] Chunk 74: size=512 buffer_size=37888
+2025-05-27 19:40:53,975 - __main__ - INFO - [KFM] Chunk 75: size=512 buffer_size=38400
+2025-05-27 19:40:53,976 - __main__ - INFO - [KFM] Chunk 76: size=512 buffer_size=38912
+2025-05-27 19:40:53,976 - __main__ - INFO - [KFM] Chunk 77: size=512 buffer_size=39424
+2025-05-27 19:40:53,976 - __main__ - INFO - [KFM] Chunk 78: size=512 buffer_size=39936
+2025-05-27 19:40:53,985 - __main__ - INFO - [KFM] Chunk 79: size=512 buffer_size=40448
+2025-05-27 19:40:53,985 - __main__ - INFO - [KFM] Chunk 80: size=512 buffer_size=40960
+2025-05-27 19:40:53,985 - __main__ - INFO - [KFM] Chunk 81: size=512 buffer_size=41472
+2025-05-27 19:40:53,989 - __main__ - INFO - [KFM] Chunk 82: size=512 buffer_size=41984
+2025-05-27 19:40:53,990 - __main__ - INFO - [KFM] Chunk 83: size=512 buffer_size=42496
+2025-05-27 19:40:53,990 - __main__ - INFO - [KFM] Chunk 84: size=512 buffer_size=43008
+2025-05-27 19:40:53,990 - __main__ - INFO - [KFM] Chunk 85: size=512 buffer_size=43520
+2025-05-27 19:40:54,233 - __main__ - INFO - [KFM] Chunk 86: size=512 buffer_size=44032
+2025-05-27 19:40:54,234 - __main__ - INFO - [KFM] Chunk 87: size=512 buffer_size=44544
+2025-05-27 19:40:54,484 - __main__ - INFO - [KFM] Chunk 88: size=512 buffer_size=45056
+2025-05-27 19:40:54,484 - __main__ - INFO - [KFM] Chunk 89: size=512 buffer_size=45568
+2025-05-27 19:40:54,735 - __main__ - INFO - [KFM] Chunk 90: size=512 buffer_size=46080
+2025-05-27 19:40:54,736 - __main__ - INFO - [KFM] Chunk 91: size=512 buffer_size=46592
+2025-05-27 19:40:54,989 - __main__ - INFO - [KFM] Chunk 92: size=512 buffer_size=47104
+2025-05-27 19:40:54,991 - __main__ - INFO - [KFM] Chunk 93: size=512 buffer_size=47616
+2025-05-27 19:40:55,265 - __main__ - INFO - [KFM] Chunk 94: size=512 buffer_size=48128
+2025-05-27 19:40:55,266 - __main__ - INFO - [KFM] Chunk 95: size=512 buffer_size=48640
+2025-05-27 19:40:55,514 - __main__ - INFO - [KFM] Chunk 96: size=512 buffer_size=49152
+2025-05-27 19:40:55,514 - __main__ - INFO - [KFM] Chunk 97: size=512 buffer_size=49664
+2025-05-27 19:40:56,107 - __main__ - INFO - [KFM] Chunk 98: size=512 buffer_size=50176
+2025-05-27 19:40:56,108 - __main__ - INFO - [KFM] Chunk 99: size=512 buffer_size=50688
+2025-05-27 19:40:56,108 - __main__ - INFO - [KFM] Chunk 100: size=512 buffer_size=51200
+2025-05-27 19:40:56,108 - __main__ - INFO - [KFM] Chunk 101: size=512 buffer_size=51712
+2025-05-27 19:40:56,108 - __main__ - INFO - [KFM] Chunk 102: size=512 buffer_size=52224
+2025-05-27 19:40:56,351 - __main__ - INFO - [KFM] Chunk 103: size=512 buffer_size=52736
+2025-05-27 19:40:56,352 - __main__ - INFO - [KFM] Chunk 104: size=512 buffer_size=53248
+2025-05-27 19:40:56,604 - __main__ - INFO - [KFM] Chunk 105: size=512 buffer_size=53760
+2025-05-27 19:40:56,604 - __main__ - INFO - [KFM] Chunk 106: size=512 buffer_size=54272
+2025-05-27 19:40:56,702 - __main__ - INFO - Saved fingerprint for Smile FM at 1748367651 - Public URL: https://storage.googleapis.com/newbuckettest.firebasestorage.app/fingerprints/19-40-51_LiveStreamFingerprint_Smile%20FM_7s.json
+2025-05-27 19:40:56,703 - __main__ - INFO - Saved reference fingerprint locally at D:\_WORK\Radiolytics\LOGGING\fingerprints\19-40-51_LiveStreamFingerprint_Smile FM_7s.json
+2025-05-27 19:40:56,852 - __main__ - INFO - [KFM] Chunk 107: size=512 buffer_size=54784
+2025-05-27 19:40:56,852 - __main__ - INFO - [KFM] Chunk 108: size=512 buffer_size=55296
+2025-05-27 19:40:57,105 - __main__ - INFO - [KFM] Chunk 109: size=512 buffer_size=55808
+2025-05-27 19:40:57,107 - __main__ - INFO - [KFM] Chunk 110: size=512 buffer_size=56320
+2025-05-27 19:40:57,107 - __main__ - INFO - [KFM] Finished capture: 110 chunks, 28160 samples.
+2025-05-27 19:40:57,107 - __main__ - INFO - [KFM] Audio data after padding: [-0.10940552  0.50286865  0.2428894   0.01550293  0.15863037  0.00491333
+  0.31365967 -0.9626465   0.5137634   0.70336914] ... (total 56000)
+2025-05-27 19:40:57,111 - __main__ - INFO - Feature stats for KFM fingerprint: {"RMS": {"mean": 0.22413298615387509, "min": 0.0, "max": 0.5946933627128601}, "Centroid": {"mean": 0.19664261599251773, "min": 0.0, "max": 0.5172373509364998}, "Energy": {"mean": 0.19279792990003314, "min": 0.0, "max": 0.5189164876937866}, "dB": {"mean": -79.058621604102, "min": -200.0, "max": 0.0}}
+2025-05-27 19:40:57,111 - __main__ - INFO - Valid frames for KFM fingerprint: 55 / 140
+2025-05-27 19:40:57,111 - __main__ - WARNING - UNHEALTHY: KFM reference extraction: only 55 valid frames out of 140
+2025-05-27 19:41:00,898 - __main__ - INFO - Saved fingerprint for KFM at 1748367657 - Public URL: https://storage.googleapis.com/newbuckettest.firebasestorage.app/fingerprints/19-40-57_LiveStreamFingerprint_KFM_7s.json
+2025-05-27 19:41:00,901 - __main__ - INFO - Saved reference fingerprint locally at D:\_WORK\Radiolytics\LOGGING\fingerprints\19-40-57_LiveStreamFingerprint_KFM_7s.json
+2025-05-27 19:41:05,588 - __main__ - INFO - [Smile FM] Chunk 1: size=512 buffer_size=512
+2025-05-27 19:41:05,590 - __main__ - INFO - [Smile FM] Stopping capture loop. is_running=True, chunk=None
+2025-05-27 19:41:05,592 - __main__ - INFO - [Smile FM] Finished capture: 1 chunks, 256 samples.
+2025-05-27 19:41:05,593 - __main__ - INFO - [Smile FM] Audio data after padding: [-0.10940552 -0.9975586  -0.49020386  0.25878906 -0.33514404 -0.54623413
+  0.7937927   0.69241333  0.6750488   0.10235596] ... (total 56000)
+2025-05-27 19:41:05,597 - __main__ - INFO - Feature stats for Smile FM fingerprint: {"RMS": {"mean": 0.003058928464140211, "min": 0.0, "max": 0.4282499849796295}, "Centroid": {"mean": 0.0034604006328757832, "min": 0.0, "max": 0.48445608860260964}, "Energy": {"mean": 0.0018913056169237409, "min": 0.0, "max": 0.26478278636932373}, "dB": {"mean": -154.33832894733973, "min": -200.0, "max": 0.0}}
+2025-05-27 19:41:05,598 - __main__ - INFO - Valid frames for Smile FM fingerprint: 1 / 140
+2025-05-27 19:41:05,598 - __main__ - WARNING - UNHEALTHY: Smile FM reference extraction: only 1 valid frames out of 140
+2025-05-27 19:41:08,631 - __main__ - INFO - Saved fingerprint for Smile FM at 1748367665 - Public URL: https://storage.googleapis.com/newbuckettest.firebasestorage.app/fingerprints/19-41-05_LiveStreamFingerprint_Smile%20FM_7s.json
+2025-05-27 19:41:08,631 - __main__ - INFO - Saved reference fingerprint locally at D:\_WORK\Radiolytics\LOGGING\fingerprints\19-41-05_LiveStreamFingerprint_Smile FM_7s.json
+2025-05-27 19:41:09,056 - __main__ - INFO - [KFM] Using ffmpeg-based fallback pipeline for audio capture.
+2025-05-27 19:41:09,057 - __main__ - ERROR - [KFM] FFMPEG fallback error: No module named 'radiolytics_server'
+2025-05-27 19:41:12,247 - __main__ - INFO - [KFM] Chunk 1: size=512 buffer_size=512
+2025-05-27 19:41:12,247 - __main__ - INFO - [KFM] Chunk 2: size=512 buffer_size=1024
+2025-05-27 19:41:12,248 - __main__ - INFO - [KFM] Chunk 3: size=512 buffer_size=1536
+2025-05-27 19:41:12,248 - __main__ - INFO - [KFM] Chunk 4: size=512 buffer_size=2048
+2025-05-27 19:41:12,400 - __main__ - INFO - [KFM] Chunk 5: size=512 buffer_size=2560
+2025-05-27 19:41:12,401 - __main__ - INFO - [KFM] Chunk 6: size=512 buffer_size=3072
+2025-05-27 19:41:12,402 - __main__ - INFO - [KFM] Chunk 7: size=512 buffer_size=3584
+2025-05-27 19:41:12,403 - __main__ - INFO - [KFM] Chunk 8: size=512 buffer_size=4096
+2025-05-27 19:41:12,403 - __main__ - INFO - [KFM] Chunk 9: size=512 buffer_size=4608
+2025-05-27 19:41:12,403 - __main__ - INFO - [KFM] Chunk 10: size=512 buffer_size=5120
+2025-05-27 19:41:12,403 - __main__ - INFO - [KFM] Chunk 11: size=512 buffer_size=5632
+2025-05-27 19:41:12,404 - __main__ - INFO - [KFM] Chunk 12: size=512 buffer_size=6144
+2025-05-27 19:41:12,404 - __main__ - INFO - [KFM] Chunk 13: size=512 buffer_size=6656
+2025-05-27 19:41:12,404 - __main__ - INFO - [KFM] Chunk 14: size=512 buffer_size=7168
+2025-05-27 19:41:12,404 - __main__ - INFO - [KFM] Chunk 15: size=512 buffer_size=7680
+2025-05-27 19:41:12,405 - __main__ - INFO - [KFM] Chunk 16: size=512 buffer_size=8192
+2025-05-27 19:41:12,405 - __main__ - INFO - [KFM] Chunk 17: size=512 buffer_size=8704
+2025-05-27 19:41:12,405 - __main__ - INFO - [KFM] Chunk 18: size=512 buffer_size=9216
+2025-05-27 19:41:12,406 - __main__ - INFO - [KFM] Chunk 19: size=512 buffer_size=9728
+2025-05-27 19:41:12,406 - __main__ - INFO - [KFM] Chunk 20: size=512 buffer_size=10240
+2025-05-27 19:41:12,406 - __main__ - INFO - [KFM] Chunk 21: size=512 buffer_size=10752
+2025-05-27 19:41:12,406 - __main__ - INFO - [KFM] Chunk 22: size=512 buffer_size=11264
+2025-05-27 19:41:12,407 - __main__ - INFO - [KFM] Chunk 23: size=512 buffer_size=11776
+2025-05-27 19:41:12,407 - __main__ - INFO - [KFM] Chunk 24: size=512 buffer_size=12288
+2025-05-27 19:41:12,407 - __main__ - INFO - [KFM] Chunk 25: size=512 buffer_size=12800
+2025-05-27 19:41:12,407 - __main__ - INFO - [KFM] Chunk 26: size=512 buffer_size=13312
+2025-05-27 19:41:12,407 - __main__ - INFO - [KFM] Chunk 27: size=512 buffer_size=13824
+2025-05-27 19:41:12,407 - __main__ - INFO - [KFM] Chunk 28: size=512 buffer_size=14336
+2025-05-27 19:41:12,407 - __main__ - INFO - [KFM] Chunk 29: size=512 buffer_size=14848
+2025-05-27 19:41:12,407 - __main__ - INFO - [KFM] Chunk 30: size=512 buffer_size=15360
+2025-05-27 19:41:12,407 - __main__ - INFO - [KFM] Chunk 31: size=512 buffer_size=15872
+2025-05-27 19:41:12,407 - __main__ - INFO - [KFM] Chunk 32: size=512 buffer_size=16384
+2025-05-27 19:41:12,408 - __main__ - INFO - [KFM] Chunk 33: size=512 buffer_size=16896
+2025-05-27 19:41:12,408 - __main__ - INFO - [KFM] Chunk 34: size=512 buffer_size=17408
+2025-05-27 19:41:12,408 - __main__ - INFO - [KFM] Chunk 35: size=512 buffer_size=17920
+2025-05-27 19:41:12,408 - __main__ - INFO - [KFM] Chunk 36: size=512 buffer_size=18432
+2025-05-27 19:41:12,408 - __main__ - INFO - [KFM] Chunk 37: size=512 buffer_size=18944
+2025-05-27 19:41:12,408 - __main__ - INFO - [KFM] Chunk 38: size=512 buffer_size=19456
+2025-05-27 19:41:12,408 - __main__ - INFO - [KFM] Chunk 39: size=512 buffer_size=19968
+2025-05-27 19:41:12,408 - __main__ - INFO - [KFM] Chunk 40: size=512 buffer_size=20480
+2025-05-27 19:41:12,408 - __main__ - INFO - [KFM] Chunk 41: size=512 buffer_size=20992
+2025-05-27 19:41:12,408 - __main__ - INFO - [KFM] Chunk 42: size=512 buffer_size=21504
+2025-05-27 19:41:12,408 - __main__ - INFO - [KFM] Chunk 43: size=512 buffer_size=22016
+2025-05-27 19:41:12,409 - __main__ - INFO - [KFM] Chunk 44: size=512 buffer_size=22528
+2025-05-27 19:41:12,409 - __main__ - INFO - [KFM] Chunk 45: size=512 buffer_size=23040
+2025-05-27 19:41:12,409 - __main__ - INFO - [KFM] Chunk 46: size=512 buffer_size=23552
+2025-05-27 19:41:12,409 - __main__ - INFO - [KFM] Chunk 47: size=512 buffer_size=24064
+2025-05-27 19:41:12,410 - __main__ - INFO - [KFM] Chunk 48: size=512 buffer_size=24576
+2025-05-27 19:41:12,410 - __main__ - INFO - [KFM] Chunk 49: size=512 buffer_size=25088
+2025-05-27 19:41:12,550 - __main__ - INFO - [KFM] Chunk 50: size=512 buffer_size=25600
+2025-05-27 19:41:12,551 - __main__ - INFO - [KFM] Chunk 51: size=512 buffer_size=26112
+2025-05-27 19:41:12,551 - __main__ - INFO - [KFM] Chunk 52: size=512 buffer_size=26624
+2025-05-27 19:41:12,551 - __main__ - INFO - [KFM] Chunk 53: size=512 buffer_size=27136
+2025-05-27 19:41:12,551 - __main__ - INFO - [KFM] Chunk 54: size=512 buffer_size=27648
+2025-05-27 19:41:12,552 - __main__ - INFO - [KFM] Chunk 55: size=512 buffer_size=28160
+2025-05-27 19:41:12,552 - __main__ - INFO - [KFM] Chunk 56: size=512 buffer_size=28672
+2025-05-27 19:41:12,552 - __main__ - INFO - [KFM] Chunk 57: size=512 buffer_size=29184
+2025-05-27 19:41:12,552 - __main__ - INFO - [KFM] Chunk 58: size=512 buffer_size=29696
+2025-05-27 19:41:12,552 - __main__ - INFO - [KFM] Chunk 59: size=512 buffer_size=30208
+2025-05-27 19:41:12,552 - __main__ - INFO - [KFM] Chunk 60: size=512 buffer_size=30720
+2025-05-27 19:41:12,553 - __main__ - INFO - [KFM] Chunk 61: size=512 buffer_size=31232
+2025-05-27 19:41:12,553 - __main__ - INFO - [KFM] Chunk 62: size=512 buffer_size=31744
+2025-05-27 19:41:12,553 - __main__ - INFO - [KFM] Chunk 63: size=512 buffer_size=32256
+2025-05-27 19:41:12,553 - __main__ - INFO - [KFM] Chunk 64: size=512 buffer_size=32768
+2025-05-27 19:41:12,553 - __main__ - INFO - [KFM] Chunk 65: size=512 buffer_size=33280
+2025-05-27 19:41:12,553 - __main__ - INFO - [KFM] Chunk 66: size=512 buffer_size=33792
+2025-05-27 19:41:12,553 - __main__ - INFO - [KFM] Chunk 67: size=512 buffer_size=34304
+2025-05-27 19:41:12,554 - __main__ - INFO - [KFM] Chunk 68: size=512 buffer_size=34816
+2025-05-27 19:41:12,554 - __main__ - INFO - [KFM] Chunk 69: size=512 buffer_size=35328
+2025-05-27 19:41:12,554 - __main__ - INFO - [KFM] Chunk 70: size=512 buffer_size=35840
+2025-05-27 19:41:12,554 - __main__ - INFO - [KFM] Chunk 71: size=512 buffer_size=36352
+2025-05-27 19:41:12,554 - __main__ - INFO - [KFM] Chunk 72: size=512 buffer_size=36864
+2025-05-27 19:41:12,554 - __main__ - INFO - [KFM] Chunk 73: size=512 buffer_size=37376
+2025-05-27 19:41:12,554 - __main__ - INFO - [KFM] Chunk 74: size=512 buffer_size=37888
+2025-05-27 19:41:12,555 - __main__ - INFO - [KFM] Chunk 75: size=512 buffer_size=38400
+2025-05-27 19:41:12,555 - __main__ - INFO - [KFM] Chunk 76: size=512 buffer_size=38912
+2025-05-27 19:41:12,555 - __main__ - INFO - [KFM] Chunk 77: size=512 buffer_size=39424
+2025-05-27 19:41:12,555 - __main__ - INFO - [KFM] Chunk 78: size=512 buffer_size=39936
+2025-05-27 19:41:12,555 - __main__ - INFO - [KFM] Chunk 79: size=512 buffer_size=40448
+2025-05-27 19:41:12,555 - __main__ - INFO - [KFM] Chunk 80: size=512 buffer_size=40960
+2025-05-27 19:41:12,556 - __main__ - INFO - [KFM] Chunk 81: size=512 buffer_size=41472
+2025-05-27 19:41:12,556 - __main__ - INFO - [KFM] Chunk 82: size=512 buffer_size=41984
+2025-05-27 19:41:12,556 - __main__ - INFO - [KFM] Chunk 83: size=512 buffer_size=42496
+2025-05-27 19:41:12,556 - __main__ - INFO - [KFM] Chunk 84: size=512 buffer_size=43008
+2025-05-27 19:41:12,557 - __main__ - INFO - [KFM] Chunk 85: size=512 buffer_size=43520
+2025-05-27 19:41:12,746 - __main__ - INFO - [KFM] Chunk 86: size=512 buffer_size=44032
+2025-05-27 19:41:12,747 - __main__ - INFO - [KFM] Chunk 87: size=512 buffer_size=44544
+2025-05-27 19:41:12,997 - __main__ - INFO - [KFM] Chunk 88: size=512 buffer_size=45056
+2025-05-27 19:41:13,250 - __main__ - INFO - [KFM] Chunk 89: size=512 buffer_size=45568
+2025-05-27 19:41:13,251 - __main__ - INFO - [KFM] Chunk 90: size=512 buffer_size=46080
+2025-05-27 19:41:13,255 - __main__ - INFO - [KFM] Chunk 91: size=512 buffer_size=46592
+2025-05-27 19:41:13,498 - __main__ - INFO - [KFM] Chunk 92: size=512 buffer_size=47104
+2025-05-27 19:41:13,499 - __main__ - INFO - [KFM] Chunk 93: size=512 buffer_size=47616
+2025-05-27 19:41:13,750 - __main__ - INFO - [KFM] Chunk 94: size=512 buffer_size=48128
+2025-05-27 19:41:13,751 - __main__ - INFO - [KFM] Chunk 95: size=512 buffer_size=48640
+2025-05-27 19:41:13,998 - __main__ - INFO - [KFM] Chunk 96: size=512 buffer_size=49152
+2025-05-27 19:41:13,998 - __main__ - INFO - [KFM] Chunk 97: size=512 buffer_size=49664
+2025-05-27 19:41:14,251 - __main__ - INFO - [KFM] Chunk 98: size=512 buffer_size=50176
+2025-05-27 19:41:14,252 - __main__ - INFO - [KFM] Chunk 99: size=512 buffer_size=50688
+2025-05-27 19:41:14,502 - __main__ - INFO - [KFM] Chunk 100: size=512 buffer_size=51200
+2025-05-27 19:41:14,503 - __main__ - INFO - [KFM] Chunk 101: size=512 buffer_size=51712
+2025-05-27 19:41:14,752 - __main__ - INFO - [KFM] Chunk 102: size=512 buffer_size=52224
+2025-05-27 19:41:14,752 - __main__ - INFO - [KFM] Chunk 103: size=512 buffer_size=52736
+2025-05-27 19:41:15,002 - __main__ - INFO - [KFM] Chunk 104: size=512 buffer_size=53248
+2025-05-27 19:41:15,003 - __main__ - INFO - [KFM] Chunk 105: size=512 buffer_size=53760
+2025-05-27 19:41:15,254 - __main__ - INFO - [KFM] Chunk 106: size=512 buffer_size=54272
+2025-05-27 19:41:15,255 - __main__ - INFO - [KFM] Chunk 107: size=512 buffer_size=54784
+2025-05-27 19:41:15,260 - __main__ - INFO - [KFM] Chunk 108: size=512 buffer_size=55296
+2025-05-27 19:41:15,505 - __main__ - INFO - [KFM] Chunk 109: size=512 buffer_size=55808
+2025-05-27 19:41:15,753 - __main__ - INFO - [KFM] Chunk 110: size=512 buffer_size=56320
+2025-05-27 19:41:15,753 - __main__ - INFO - [KFM] Finished capture: 110 chunks, 28160 samples.
+2025-05-27 19:41:15,754 - __main__ - INFO - [KFM] Audio data after padding: [-0.10940552  0.50286865  0.24295044  0.01550293  0.4081421  -0.22924805
+  0.22006226 -0.43673706  0.13720703 -0.84677124] ... (total 56000)
+2025-05-27 19:41:15,758 - __main__ - INFO - Feature stats for KFM fingerprint: {"RMS": {"mean": 0.2243737850870405, "min": 0.0, "max": 0.5942203998565674}, "Centroid": {"mean": 0.19680494549940183, "min": 0.0, "max": 0.5165905468301568}, "Energy": {"mean": 0.1919694312981197, "min": 0.0, "max": 0.5178162455558777}, "dB": {"mean": -79.05488349369594, "min": -200.0, "max": 0.0}}
+2025-05-27 19:41:15,759 - __main__ - INFO - Valid frames for KFM fingerprint: 55 / 140
+2025-05-27 19:41:15,759 - __main__ - WARNING - UNHEALTHY: KFM reference extraction: only 55 valid frames out of 140
+2025-05-27 19:41:16,703 - __main__ - INFO - [Smile FM] Chunk 1: size=512 buffer_size=512
+2025-05-27 19:41:16,704 - __main__ - INFO - [Smile FM] Stopping capture loop. is_running=True, chunk=None
+2025-05-27 19:41:16,705 - __main__ - INFO - [Smile FM] Finished capture: 1 chunks, 256 samples.
+2025-05-27 19:41:16,706 - __main__ - INFO - [Smile FM] Audio data after padding: [-0.10940552 -0.9975586  -0.49038696  0.25842285 -0.34295654 -0.4234314
+  0.7696228  -0.4267578   0.895874    0.22738647] ... (total 56000)
+2025-05-27 19:41:16,711 - __main__ - INFO - Feature stats for Smile FM fingerprint: {"RMS": {"mean": 0.002830812760761806, "min": 0.0, "max": 0.39631378650665283}, "Centroid": {"mean": 0.0035311453412053447, "min": 0.0, "max": 0.49436034776874827}, "Energy": {"mean": 0.0016738138028553555, "min": 0.0, "max": 0.23433393239974976}, "dB": {"mean": -154.34313725743974, "min": -200.0, "max": 0.0}}
+2025-05-27 19:41:16,711 - __main__ - INFO - Valid frames for Smile FM fingerprint: 1 / 140
+2025-05-27 19:41:16,712 - __main__ - WARNING - UNHEALTHY: Smile FM reference extraction: only 1 valid frames out of 140
+2025-05-27 19:41:18,801 - __main__ - INFO - Saved fingerprint for KFM at 1748367675 - Public URL: https://storage.googleapis.com/newbuckettest.firebasestorage.app/fingerprints/19-41-15_LiveStreamFingerprint_KFM_7s.json
+2025-05-27 19:41:18,804 - __main__ - INFO - Saved reference fingerprint locally at D:\_WORK\Radiolytics\LOGGING\fingerprints\19-41-15_LiveStreamFingerprint_KFM_7s.json
+2025-05-27 19:41:19,770 - __main__ - INFO - Saved fingerprint for Smile FM at 1748367676 - Public URL: https://storage.googleapis.com/newbuckettest.firebasestorage.app/fingerprints/19-41-16_LiveStreamFingerprint_Smile%20FM_7s.json
+2025-05-27 19:41:19,772 - __main__ - INFO - Saved reference fingerprint locally at D:\_WORK\Radiolytics\LOGGING\fingerprints\19-41-16_LiveStreamFingerprint_Smile FM_7s.json
+2025-05-27 19:41:26,171 - __main__ - INFO - [KFM] Using ffmpeg-based fallback pipeline for audio capture.
+2025-05-27 19:41:26,172 - __main__ - ERROR - [KFM] FFMPEG fallback error: No module named 'radiolytics_server'
+2025-05-27 19:41:28,348 - __main__ - INFO - [Smile FM] Chunk 1: size=512 buffer_size=512
+2025-05-27 19:41:28,348 - __main__ - INFO - [Smile FM] Stopping capture loop. is_running=True, chunk=None
+2025-05-27 19:41:28,348 - __main__ - INFO - [Smile FM] Finished capture: 1 chunks, 256 samples.
+2025-05-27 19:41:28,349 - __main__ - INFO - [Smile FM] Audio data after padding: [-0.10940552 -0.9975586   0.5095215   0.2619629  -0.34295654 -0.1643982
+  0.8009949  -0.3100586   0.4083252   0.06448364] ... (total 56000)
+2025-05-27 19:41:28,351 - __main__ - INFO - Feature stats for Smile FM fingerprint: {"RMS": {"mean": 0.0029332957097462247, "min": 0.0, "max": 0.41066139936447144}, "Centroid": {"mean": 0.0037137048719466134, "min": 0.0, "max": 0.5199186820725259}, "Energy": {"mean": 0.0017759570053645542, "min": 0.0, "max": 0.2486339807510376}, "dB": {"mean": -154.34093087400709, "min": -200.0, "max": 0.0}}
+2025-05-27 19:41:28,351 - __main__ - INFO - Valid frames for Smile FM fingerprint: 1 / 140
+2025-05-27 19:41:28,351 - __main__ - WARNING - UNHEALTHY: Smile FM reference extraction: only 1 valid frames out of 140
+2025-05-27 19:41:29,586 - __main__ - INFO - [KFM] Chunk 1: size=512 buffer_size=512
+2025-05-27 19:41:29,588 - __main__ - INFO - [KFM] Chunk 2: size=512 buffer_size=1024
+2025-05-27 19:41:29,592 - __main__ - INFO - [KFM] Chunk 3: size=512 buffer_size=1536
+2025-05-27 19:41:29,593 - __main__ - INFO - [KFM] Chunk 4: size=512 buffer_size=2048
+2025-05-27 19:41:29,594 - __main__ - INFO - [KFM] Chunk 5: size=512 buffer_size=2560
+2025-05-27 19:41:29,596 - __main__ - INFO - [KFM] Chunk 6: size=512 buffer_size=3072
+2025-05-27 19:41:29,596 - __main__ - INFO - [KFM] Chunk 7: size=512 buffer_size=3584
+2025-05-27 19:41:29,597 - __main__ - INFO - [KFM] Chunk 8: size=512 buffer_size=4096
+2025-05-27 19:41:29,597 - __main__ - INFO - [KFM] Chunk 9: size=512 buffer_size=4608
+2025-05-27 19:41:29,597 - __main__ - INFO - [KFM] Chunk 10: size=512 buffer_size=5120
+2025-05-27 19:41:29,606 - __main__ - INFO - [KFM] Chunk 11: size=512 buffer_size=5632
+2025-05-27 19:41:29,606 - __main__ - INFO - [KFM] Chunk 12: size=512 buffer_size=6144
+2025-05-27 19:41:29,606 - __main__ - INFO - [KFM] Chunk 13: size=512 buffer_size=6656
+2025-05-27 19:41:29,606 - __main__ - INFO - [KFM] Chunk 14: size=512 buffer_size=7168
+2025-05-27 19:41:29,616 - __main__ - INFO - [KFM] Chunk 15: size=512 buffer_size=7680
+2025-05-27 19:41:29,616 - __main__ - INFO - [KFM] Chunk 16: size=512 buffer_size=8192
+2025-05-27 19:41:29,617 - __main__ - INFO - [KFM] Chunk 17: size=512 buffer_size=8704
+2025-05-27 19:41:29,617 - __main__ - INFO - [KFM] Chunk 18: size=512 buffer_size=9216
+2025-05-27 19:41:29,617 - __main__ - INFO - [KFM] Chunk 19: size=512 buffer_size=9728
+2025-05-27 19:41:29,626 - __main__ - INFO - [KFM] Chunk 20: size=512 buffer_size=10240
+2025-05-27 19:41:29,626 - __main__ - INFO - [KFM] Chunk 21: size=512 buffer_size=10752
+2025-05-27 19:41:29,627 - __main__ - INFO - [KFM] Chunk 22: size=512 buffer_size=11264
+2025-05-27 19:41:29,627 - __main__ - INFO - [KFM] Chunk 23: size=512 buffer_size=11776
+2025-05-27 19:41:29,637 - __main__ - INFO - [KFM] Chunk 24: size=512 buffer_size=12288
+2025-05-27 19:41:29,637 - __main__ - INFO - [KFM] Chunk 25: size=512 buffer_size=12800
+2025-05-27 19:41:29,637 - __main__ - INFO - [KFM] Chunk 26: size=512 buffer_size=13312
+2025-05-27 19:41:29,637 - __main__ - INFO - [KFM] Chunk 27: size=512 buffer_size=13824
+2025-05-27 19:41:29,637 - __main__ - INFO - [KFM] Chunk 28: size=512 buffer_size=14336
+2025-05-27 19:41:29,647 - __main__ - INFO - [KFM] Chunk 29: size=512 buffer_size=14848
+2025-05-27 19:41:29,647 - __main__ - INFO - [KFM] Chunk 30: size=512 buffer_size=15360
+2025-05-27 19:41:29,647 - __main__ - INFO - [KFM] Chunk 31: size=512 buffer_size=15872
+2025-05-27 19:41:29,648 - __main__ - INFO - [KFM] Chunk 32: size=512 buffer_size=16384
+2025-05-27 19:41:29,732 - __main__ - INFO - [KFM] Chunk 33: size=512 buffer_size=16896
+2025-05-27 19:41:29,734 - __main__ - INFO - [KFM] Chunk 34: size=512 buffer_size=17408
+2025-05-27 19:41:29,735 - __main__ - INFO - [KFM] Chunk 35: size=512 buffer_size=17920
+2025-05-27 19:41:29,736 - __main__ - INFO - [KFM] Chunk 36: size=512 buffer_size=18432
+2025-05-27 19:41:29,736 - __main__ - INFO - [KFM] Chunk 37: size=512 buffer_size=18944
+2025-05-27 19:41:29,737 - __main__ - INFO - [KFM] Chunk 38: size=512 buffer_size=19456
+2025-05-27 19:41:29,737 - __main__ - INFO - [KFM] Chunk 39: size=512 buffer_size=19968
+2025-05-27 19:41:29,738 - __main__ - INFO - [KFM] Chunk 40: size=512 buffer_size=20480
+2025-05-27 19:41:29,738 - __main__ - INFO - [KFM] Chunk 41: size=512 buffer_size=20992
+2025-05-27 19:41:29,746 - __main__ - INFO - [KFM] Chunk 42: size=512 buffer_size=21504
+2025-05-27 19:41:29,746 - __main__ - INFO - [KFM] Chunk 43: size=512 buffer_size=22016
+2025-05-27 19:41:29,747 - __main__ - INFO - [KFM] Chunk 44: size=512 buffer_size=22528
+2025-05-27 19:41:29,747 - __main__ - INFO - [KFM] Chunk 45: size=512 buffer_size=23040
+2025-05-27 19:41:29,747 - __main__ - INFO - [KFM] Chunk 46: size=512 buffer_size=23552
+2025-05-27 19:41:29,757 - __main__ - INFO - [KFM] Chunk 47: size=512 buffer_size=24064
+2025-05-27 19:41:29,757 - __main__ - INFO - [KFM] Chunk 48: size=512 buffer_size=24576
+2025-05-27 19:41:29,757 - __main__ - INFO - [KFM] Chunk 49: size=512 buffer_size=25088
+2025-05-27 19:41:29,757 - __main__ - INFO - [KFM] Chunk 50: size=512 buffer_size=25600
+2025-05-27 19:41:29,767 - __main__ - INFO - [KFM] Chunk 51: size=512 buffer_size=26112
+2025-05-27 19:41:29,767 - __main__ - INFO - [KFM] Chunk 52: size=512 buffer_size=26624
+2025-05-27 19:41:29,768 - __main__ - INFO - [KFM] Chunk 53: size=512 buffer_size=27136
+2025-05-27 19:41:29,772 - __main__ - INFO - [KFM] Chunk 54: size=512 buffer_size=27648
+2025-05-27 19:41:29,772 - __main__ - INFO - [KFM] Chunk 55: size=512 buffer_size=28160
+2025-05-27 19:41:29,772 - __main__ - INFO - [KFM] Chunk 56: size=512 buffer_size=28672
+2025-05-27 19:41:29,772 - __main__ - INFO - [KFM] Chunk 57: size=512 buffer_size=29184
+2025-05-27 19:41:29,782 - __main__ - INFO - [KFM] Chunk 58: size=512 buffer_size=29696
+2025-05-27 19:41:29,783 - __main__ - INFO - [KFM] Chunk 59: size=512 buffer_size=30208
+2025-05-27 19:41:29,783 - __main__ - INFO - [KFM] Chunk 60: size=512 buffer_size=30720
+2025-05-27 19:41:29,783 - __main__ - INFO - [KFM] Chunk 61: size=512 buffer_size=31232
+2025-05-27 19:41:29,783 - __main__ - INFO - [KFM] Chunk 62: size=512 buffer_size=31744
+2025-05-27 19:41:29,793 - __main__ - INFO - [KFM] Chunk 63: size=512 buffer_size=32256
+2025-05-27 19:41:29,793 - __main__ - INFO - [KFM] Chunk 64: size=512 buffer_size=32768
+2025-05-27 19:41:29,793 - __main__ - INFO - [KFM] Chunk 65: size=512 buffer_size=33280
+2025-05-27 19:41:29,793 - __main__ - INFO - [KFM] Chunk 66: size=512 buffer_size=33792
+2025-05-27 19:41:29,803 - __main__ - INFO - [KFM] Chunk 67: size=512 buffer_size=34304
+2025-05-27 19:41:29,803 - __main__ - INFO - [KFM] Chunk 68: size=512 buffer_size=34816
+2025-05-27 19:41:29,804 - __main__ - INFO - [KFM] Chunk 69: size=512 buffer_size=35328
+2025-05-27 19:41:29,804 - __main__ - INFO - [KFM] Chunk 70: size=512 buffer_size=35840
+2025-05-27 19:41:29,804 - __main__ - INFO - [KFM] Chunk 71: size=512 buffer_size=36352
+2025-05-27 19:41:29,812 - __main__ - INFO - [KFM] Chunk 72: size=512 buffer_size=36864
+2025-05-27 19:41:29,812 - __main__ - INFO - [KFM] Chunk 73: size=512 buffer_size=37376
+2025-05-27 19:41:29,812 - __main__ - INFO - [KFM] Chunk 74: size=512 buffer_size=37888
+2025-05-27 19:41:29,812 - __main__ - INFO - [KFM] Chunk 75: size=512 buffer_size=38400
+2025-05-27 19:41:29,821 - __main__ - INFO - [KFM] Chunk 76: size=512 buffer_size=38912
+2025-05-27 19:41:29,821 - __main__ - INFO - [KFM] Chunk 77: size=512 buffer_size=39424
+2025-05-27 19:41:29,822 - __main__ - INFO - [KFM] Chunk 78: size=512 buffer_size=39936
+2025-05-27 19:41:29,822 - __main__ - INFO - [KFM] Chunk 79: size=512 buffer_size=40448
+2025-05-27 19:41:29,830 - __main__ - INFO - [KFM] Chunk 80: size=512 buffer_size=40960
+2025-05-27 19:41:29,831 - __main__ - INFO - [KFM] Chunk 81: size=512 buffer_size=41472
+2025-05-27 19:41:30,336 - __main__ - INFO - [KFM] Chunk 82: size=512 buffer_size=41984
+2025-05-27 19:41:30,336 - __main__ - INFO - [KFM] Chunk 83: size=512 buffer_size=42496
+2025-05-27 19:41:30,338 - __main__ - INFO - [KFM] Chunk 84: size=512 buffer_size=43008
+2025-05-27 19:41:30,339 - __main__ - INFO - [KFM] Chunk 85: size=512 buffer_size=43520
+2025-05-27 19:41:30,339 - __main__ - INFO - [KFM] Chunk 86: size=512 buffer_size=44032
+2025-05-27 19:41:30,340 - __main__ - INFO - [KFM] Chunk 87: size=512 buffer_size=44544
+2025-05-27 19:41:30,344 - __main__ - INFO - [KFM] Chunk 88: size=512 buffer_size=45056
+2025-05-27 19:41:30,344 - __main__ - INFO - [KFM] Chunk 89: size=512 buffer_size=45568
+2025-05-27 19:41:30,588 - __main__ - INFO - [KFM] Chunk 90: size=512 buffer_size=46080
+2025-05-27 19:41:31,340 - __main__ - INFO - [KFM] Chunk 91: size=512 buffer_size=46592
+2025-05-27 19:41:31,340 - __main__ - INFO - [KFM] Chunk 92: size=512 buffer_size=47104
+2025-05-27 19:41:31,341 - __main__ - INFO - [KFM] Chunk 93: size=512 buffer_size=47616
+2025-05-27 19:41:31,341 - __main__ - INFO - [KFM] Chunk 94: size=512 buffer_size=48128
+2025-05-27 19:41:31,341 - __main__ - INFO - [KFM] Chunk 95: size=512 buffer_size=48640
+2025-05-27 19:41:31,341 - __main__ - INFO - [KFM] Chunk 96: size=512 buffer_size=49152
+2025-05-27 19:41:31,347 - __main__ - INFO - [KFM] Chunk 97: size=512 buffer_size=49664
+2025-05-27 19:41:31,401 - __main__ - INFO - Saved fingerprint for Smile FM at 1748367688 - Public URL: https://storage.googleapis.com/newbuckettest.firebasestorage.app/fingerprints/19-41-28_LiveStreamFingerprint_Smile%20FM_7s.json
+2025-05-27 19:41:31,402 - __main__ - INFO - Saved reference fingerprint locally at D:\_WORK\Radiolytics\LOGGING\fingerprints\19-41-28_LiveStreamFingerprint_Smile FM_7s.json
+2025-05-27 19:41:32,344 - __main__ - INFO - [KFM] Chunk 98: size=512 buffer_size=50176
+2025-05-27 19:41:32,345 - __main__ - INFO - [KFM] Chunk 99: size=512 buffer_size=50688
+2025-05-27 19:41:32,347 - __main__ - INFO - [KFM] Chunk 100: size=512 buffer_size=51200
+2025-05-27 19:41:32,348 - __main__ - INFO - [KFM] Chunk 101: size=512 buffer_size=51712
+2025-05-27 19:41:32,349 - __main__ - INFO - [KFM] Chunk 102: size=512 buffer_size=52224
+2025-05-27 19:41:32,349 - __main__ - INFO - [KFM] Chunk 103: size=512 buffer_size=52736
+2025-05-27 19:41:32,351 - __main__ - INFO - [KFM] Chunk 104: size=512 buffer_size=53248
+2025-05-27 19:41:32,352 - __main__ - INFO - [KFM] Chunk 105: size=512 buffer_size=53760
+2025-05-27 19:41:32,593 - __main__ - INFO - [KFM] Chunk 106: size=512 buffer_size=54272
+2025-05-27 19:41:32,593 - __main__ - INFO - [KFM] Chunk 107: size=512 buffer_size=54784
+2025-05-27 19:41:32,594 - __main__ - INFO - [KFM] Chunk 108: size=512 buffer_size=55296
+2025-05-27 19:41:33,346 - __main__ - INFO - [KFM] Chunk 109: size=512 buffer_size=55808
+2025-05-27 19:41:33,347 - __main__ - INFO - [KFM] Finished capture: 109 chunks, 27904 samples.
+2025-05-27 19:41:33,347 - __main__ - INFO - [KFM] Audio data after padding: [-0.10940552  0.50286865 -0.5071411   0.01550293  0.15863037  0.02044678
+  0.2175293  -0.4527588   0.7500305   0.6604004 ] ... (total 56000)
+2025-05-27 19:41:33,351 - __main__ - INFO - Feature stats for KFM fingerprint: {"RMS": {"mean": 0.22140552082232068, "min": 0.0, "max": 0.592705488204956}, "Centroid": {"mean": 0.19649600653209198, "min": 0.0, "max": 0.5184617255586552}, "Energy": {"mean": 0.18851526464734758, "min": 0.0, "max": 0.5155467391014099}, "dB": {"mean": -79.10357974937983, "min": -200.0, "max": 0.0}}
+2025-05-27 19:41:33,351 - __main__ - INFO - Valid frames for KFM fingerprint: 55 / 140
+2025-05-27 19:41:33,351 - __main__ - WARNING - UNHEALTHY: KFM reference extraction: only 55 valid frames out of 140
+2025-05-27 19:41:36,382 - __main__ - INFO - Saved fingerprint for KFM at 1748367693 - Public URL: https://storage.googleapis.com/newbuckettest.firebasestorage.app/fingerprints/19-41-33_LiveStreamFingerprint_KFM_7s.json
+2025-05-27 19:41:36,384 - __main__ - INFO - Saved reference fingerprint locally at D:\_WORK\Radiolytics\LOGGING\fingerprints\19-41-33_LiveStreamFingerprint_KFM_7s.json
+2025-05-27 19:41:39,493 - __main__ - INFO - [Smile FM] Chunk 1: size=512 buffer_size=512
+2025-05-27 19:41:39,493 - __main__ - INFO - [Smile FM] Stopping capture loop. is_running=True, chunk=None
+2025-05-27 19:41:39,494 - __main__ - INFO - [Smile FM] Finished capture: 1 chunks, 256 samples.
+2025-05-27 19:41:39,494 - __main__ - INFO - [Smile FM] Audio data after padding: [-0.10940552 -0.9975586   0.25952148  0.26037598 -0.34295654 -0.57040405
+  0.02853394 -0.5576172   0.7705078  -0.95996094] ... (total 56000)
+2025-05-27 19:41:39,497 - __main__ - INFO - Feature stats for Smile FM fingerprint: {"RMS": {"mean": 0.0029566249677113123, "min": 0.0, "max": 0.41392749547958374}, "Centroid": {"mean": 0.0036355017902182096, "min": 0.0, "max": 0.5089702506305493}, "Energy": {"mean": 0.0017918522868837629, "min": 0.0, "max": 0.2508593201637268}, "dB": {"mean": -154.34043938773019, "min": -200.0, "max": 0.0}}
+2025-05-27 19:41:39,497 - __main__ - INFO - Valid frames for Smile FM fingerprint: 1 / 140
+2025-05-27 19:41:39,497 - __main__ - WARNING - UNHEALTHY: Smile FM reference extraction: only 1 valid frames out of 140

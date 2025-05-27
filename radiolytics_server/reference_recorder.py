@@ -11,6 +11,7 @@ from datetime import datetime
 import threading
 from collections import deque
 from dotenv import load_dotenv
+import importlib
 
 # --- CONFIGURATION ---
 RECORDING_INTERVAL = 7 # seconds
@@ -21,11 +22,16 @@ CHUNK_SIZE = 512       # samples
 OVERLAP = 0.5          # 50% overlap
 
 # --- LOGGING SETUP ---
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+LOGGING_DIR = os.path.join(PROJECT_ROOT, 'LOGGING')
+REFERENCE_FP_DIR = os.path.join(LOGGING_DIR, 'fingerprints')
+REFERENCE_RECORDER_LOG_PATH = os.path.join(LOGGING_DIR, 'reference_recorder.log')
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('reference_recorder.log'),
+        logging.FileHandler(REFERENCE_RECORDER_LOG_PATH),
         logging.StreamHandler()
     ]
 )
@@ -42,7 +48,7 @@ firebase_admin.initialize_app(cred, {
 bucket = storage.bucket()
 
 # Update all local fingerprint file output to use FINGERPRINT_OUTPUT_PATH from .env
-FINGERPRINT_OUTPUT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fingerprints")
+FINGERPRINT_OUTPUT_PATH = REFERENCE_FP_DIR
 logger.info(f"Using fingerprint output path: {FINGERPRINT_OUTPUT_PATH}")
 
 class RadioStreamRecorder:
@@ -113,37 +119,52 @@ class RadioStreamRecorder:
     def _capture_audio(self):
         """Capture 10 seconds of audio from the stream"""
         try:
+            if self.station_name == "KFM":
+                logger.info("[KFM] Using ffmpeg-based fallback pipeline for audio capture.")
+                try:
+                    rsc_mod = importlib.import_module('radiolytics_server.radio_stream_capture')
+                    RadioStreamCapture = getattr(rsc_mod, 'RadioStreamCapture')
+                    capture = RadioStreamCapture(self.stream_url, self.station_name, self.headers, buffer_seconds=RECORDING_INTERVAL)
+                    # Run capture for one interval, then get the latest fingerprint
+                    capture.start()
+                    time.sleep(RECORDING_INTERVAL + 2)  # Give it time to buffer/process
+                    capture.stop()
+                    fps = capture.get_fingerprints()
+                    if fps:
+                        logger.info(f"[KFM] FFMPEG fallback: Got {len(fps[-1][1])} frames from fallback pipeline.")
+                        return np.array([f for f in fps[-1][1]]).flatten()
+                    else:
+                        logger.error("[KFM] FFMPEG fallback: No frames captured.")
+                        return None
+                except Exception as e:
+                    logger.error(f"[KFM] FFMPEG fallback error: {e}")
+                    # If fallback fails, continue to normal pipeline
             buffer = BytesIO()
             start_time = time.time()
-            
-            # Stream the audio
             response = requests.get(self.stream_url, stream=True, headers=self.headers)
             if response.status_code != 200:
                 logger.error(f"Failed to connect to stream: {response.status_code}")
                 return None
-
-            # Read until we have 10 seconds of audio
-            for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
-                if not self.is_running:
+            chunk_count = 0
+            while True:
+                chunk = next(response.iter_content(chunk_size=self.CHUNK_SIZE), None)
+                if not self.is_running or chunk is None:
+                    logger.info(f"[{self.station_name}] Stopping capture loop. is_running={self.is_running}, chunk={chunk}")
                     break
-                    
-                if chunk:
-                    buffer.write(chunk)
-                    if time.time() - start_time >= RECORDING_INTERVAL:
-                        break
-
-            # Convert to numpy array
+                buffer.write(chunk)
+                chunk_count += 1
+                logger.info(f"[{self.station_name}] Chunk {chunk_count}: size={len(chunk)} buffer_size={buffer.tell()}")
+                if buffer.tell() >= self.buffer_size or (time.time() - start_time) >= RECORDING_INTERVAL:
+                    break
             buffer.seek(0)
             audio_data = np.frombuffer(buffer.read(), dtype=np.int16).astype(np.float32) / 32768.0
-            
-            # Resample to 8000 Hz if needed (using simple decimation for now)
+            logger.info(f"[{self.station_name}] Finished capture: {chunk_count} chunks, {len(audio_data)} samples.")
             if len(audio_data) > self.buffer_size:
                 audio_data = audio_data[:self.buffer_size]
             elif len(audio_data) < self.buffer_size:
                 audio_data = np.pad(audio_data, (0, self.buffer_size - len(audio_data)))
-            
+            logger.info(f"[{self.station_name}] Audio data after padding: {audio_data[:10]} ... (total {len(audio_data)})")
             return audio_data
-            
         except Exception as e:
             logger.error(f"Error capturing audio: {str(e)}")
             return None
@@ -193,8 +214,28 @@ class RadioStreamRecorder:
                 # Pad with zeros to match expected count
                 padding = [[0.0, 0.0, 0.0, 0.0]] * (self.frames_per_recording - len(fingerprint))
                 fingerprint.extend(padding)
-            
-            logger.debug(f"Generated fingerprint with {len(fingerprint)} frames")
+
+            # --- DEBUG LOGGING: Feature statistics ---
+            fp_np = np.array(fingerprint)
+            if fp_np.shape[0] > 0:
+                stats = {}
+                for i, name in enumerate(["RMS", "Centroid", "Energy", "dB"]):
+                    stats[name] = {
+                        "mean": float(np.mean(fp_np[:, i])),
+                        "min": float(np.min(fp_np[:, i])),
+                        "max": float(np.max(fp_np[:, i]))
+                    }
+                logger.info(f"Feature stats for {self.station_name} fingerprint: {json.dumps(stats)}")
+                # Count valid frames (not all zero, dB > -150)
+                valid_mask = np.logical_and(np.any(fp_np[:, :3] != 0, axis=1), fp_np[:, 3] > -150)
+                num_valid = int(np.sum(valid_mask))
+                logger.info(f"Valid frames for {self.station_name} fingerprint: {num_valid} / {len(fingerprint)}")
+                if num_valid >= 0.9 * len(fingerprint):
+                    logger.info(f"HEALTHY: {self.station_name} reference extraction: {num_valid} valid frames out of {len(fingerprint)}")
+                else:
+                    logger.warning(f"UNHEALTHY: {self.station_name} reference extraction: only {num_valid} valid frames out of {len(fingerprint)}")
+            # --- END DEBUG LOGGING ---
+
             return fingerprint
             
         except Exception as e:

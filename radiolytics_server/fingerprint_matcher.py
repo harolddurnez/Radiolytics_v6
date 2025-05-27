@@ -45,8 +45,13 @@ BUFFER_MINUTES = config.get('BUFFER_MINUTES', 3)
 LOG_CSV = config.get('LOG_CSV', 'successful_matches.csv')
 
 # --- LOGGING SETUP ---
-LOG_FILE = 'radiolytics_server.log'  # Single consolidated log file
-OLD_LOG_FILES = ['fingerprint_matcher.log', 'reference_recorder.log']  # Old log files to clean up
+import os
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+LOGGING_DIR = os.path.join(PROJECT_ROOT, 'LOGGING')
+REFERENCE_FP_DIR = os.path.join(LOGGING_DIR, 'fingerprints')
+LOG_FILE_PATH = os.path.join(LOGGING_DIR, 'radiolytics_server.log')
+REFERENCE_RECORDER_LOG_PATH = os.path.join(LOGGING_DIR, 'reference_recorder.log')
+MATCH_LOG_PATH = os.path.join(LOGGING_DIR, 'match.log')
 
 # Clear the log file when server starts and remove old log files
 def clear_log_file():
@@ -62,7 +67,7 @@ def clear_log_file():
                 print(f"Error deleting {old_log}: {e}")
         
         # Clear and initialize new log file
-        with open(LOG_FILE, 'w') as f:
+        with open(LOG_FILE_PATH, 'w') as f:
             f.write(f"=== Radiolytics Server Log ===\n")
             f.write(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
             f.write("="*80 + "\n\n")
@@ -92,7 +97,7 @@ logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s | %(levelname)-8s | %(message)s',
     handlers=[
-        logging.FileHandler(LOG_FILE),
+        logging.FileHandler(LOG_FILE_PATH),
         logging.StreamHandler()
     ]
 )
@@ -139,9 +144,6 @@ firebase_admin.initialize_app(cred, {
 })
 bucket = storage.bucket()
 db = firestore.client()
-
-# Update all local fingerprint file output to use FINGERPRINT_OUTPUT_PATH from .env
-FINGERPRINT_OUTPUT_PATH = os.getenv("FINGERPRINT_OUTPUT_PATH", "ADMIN DO NOT COMMIT/fingerprints/")
 
 class FingerprintMatcher:
     def __init__(self):
@@ -202,8 +204,8 @@ class FingerprintMatcher:
                 # Load new reference fingerprints
                 self._load_reference_fingerprints()
                 
-                # Process new incoming fingerprints
-                self._process_incoming_fingerprints()
+                # Process new incoming fingerprints (fix: call the correct method)
+                self._download_app_fingerprints()
                 
                 time.sleep(POLL_INTERVAL)
                 
@@ -289,7 +291,6 @@ class FingerprintMatcher:
             blobs = self.bucket.list_blobs(prefix="fingerprints/")
             found_any = False
             device_files = {}
-            
             for blob in blobs:
                 if "AppFingerprint" in blob.name and blob.name.endswith(".json"):
                     found_any = True
@@ -299,53 +300,48 @@ class FingerprintMatcher:
                         now = datetime.now()
                         dt = now.replace(hour=hh, minute=mm, second=ss, microsecond=0)
                         timestamp = int(dt.timestamp())
-                        
                         if timestamp > self.last_app_fingerprint_time:
                             logger.info(format_info_log("PROCESS", f"Processing {blob.name} (ts={timestamp})"))
-                            
-                            data = json.loads(blob.download_as_text())
+                            try:
+                                data = json.loads(blob.download_as_text())
+                            except Exception as e:
+                                logger.error(format_error_log("DOWNLOAD", f"Could not download or parse {blob.name}: {e}"))
+                                continue
                             device_id = data.get('device_id', 'unknown')
-                            
                             if device_id not in device_files:
                                 device_files[device_id] = []
                             device_files[device_id].append((timestamp, blob, data))
-                            
-                            blob.make_public()
-                            logger.info(format_info_log("PUBLIC", f"Made {blob.name} public: {blob.public_url}"))
-                            
-                            local_path = os.path.join(FINGERPRINT_OUTPUT_PATH, os.path.basename(blob.name))
+                            try:
+                                blob.make_public()
+                                logger.info(format_info_log("PUBLIC", f"Made {blob.name} public: {blob.public_url}"))
+                            except Exception as e:
+                                logger.error(format_error_log("PUBLIC", f"Could not make {blob.name} public: {e}"))
+                            local_path = os.path.join(REFERENCE_FP_DIR, os.path.basename(blob.name))
                             os.makedirs(os.path.dirname(local_path), exist_ok=True)
-                            with open(local_path, 'w') as f:
+                            with open(local_path, 'w', encoding='utf-8') as f:
                                 json.dump(data, f)
                             logger.info(format_info_log("SAVE", f"Saved to {local_path}"))
-                            
                             self.last_app_fingerprint_time = max(self.last_app_fingerprint_time, timestamp)
-                            
                     except Exception as e:
                         logger.error(format_error_log("PROCESS_ERROR", f"Error processing {blob.name}: {str(e)}"))
                         continue
-            
             if not found_any:
                 logger.warning(format_info_log("SCAN", "No new AppFingerprints found"))
                 return
-            
             # Process each device's newest file
             for device_id, files in device_files.items():
                 files_sorted = sorted(files, key=lambda x: x[0], reverse=True)
                 newest = files_sorted[0]
                 timestamp, blob, data = newest
-                
                 if blob.name in self.processed_files:
                     continue
-                    
                 uploaded_fp = data.get('fingerprint')
                 uploaded_ts = data.get('timestamp')
-                
                 debug_log_lines = []
                 def debug_logger(msg):
                     debug_log_lines.append(msg)
                     logger.info(msg)
-                    
+                    match_logger.info(msg)
                 best_match, summary_line = self._find_best_match_with_log(
                     uploaded_fp, 
                     app_fp_filename=os.path.basename(blob.name),
@@ -409,7 +405,35 @@ class FingerprintMatcher:
         try:
             # Log start of new report
             log_report_start(app_fp_filename, app_fp_timestamp)
-            
+            if debug_logger:
+                debug_logger(f"App fingerprint: {app_fp_filename}, timestamp: {app_fp_timestamp}")
+
+            # --- Feature scaling function (DISABLED) ---
+            # def scale_features(fp):
+            #     return [[f[0]*0.02, f[1]*0.02, f[2]*0.02, f[3]] for f in fp]
+
+            # --- Filter out silence frames from reference fingerprints ---
+            filtered_reference_fps = {}
+            for ref_key, ref_fp_list in self.reference_fingerprints.items():
+                for ref_ts, ref_st, ref_fp in ref_fp_list:
+                    filtered = [f for f in ref_fp if f[3] > -150]
+                    key = f"{ref_st}_{ref_ts}"
+                    # NO SCALING: use raw features
+                    filtered_reference_fps[key] = filtered
+                    if debug_logger:
+                        debug_logger(f"Reference {key}: {len(filtered)} valid frames after silence filter")
+
+            # --- Use raw app fingerprint (NO SCALING) ---
+            raw_app_fp = uploaded_fp
+            if debug_logger:
+                debug_logger(f"App fingerprint: {len(raw_app_fp)} frames (raw, no scaling)")
+
+            # Log ALL feature vectors for app and each reference
+            if debug_logger:
+                debug_logger(f"App features (all): {json.dumps(raw_app_fp)}")
+                for ref_key, ref_fp in filtered_reference_fps.items():
+                    debug_logger(f"Reference {ref_key} features (all): {json.dumps(ref_fp)}")
+
             best_match = None
             best_similarity = float('-inf')
             best_offset = 0
@@ -568,7 +592,7 @@ def open_log_in_vscode():
     """Open the log file in VS Code with auto-update enabled."""
     try:
         # Get the absolute path to the log file
-        log_path = os.path.abspath(LOG_FILE)
+        log_path = os.path.abspath(LOG_FILE_PATH)
         
         # Try to open in VS Code
         if sys.platform == 'win32':
@@ -583,7 +607,7 @@ def open_log_in_vscode():
         print("Tip: The log will auto-update as new entries are added")
     except Exception as e:
         print(f"Could not open log in VS Code: {e}")
-        print(f"Please open {LOG_FILE} manually in your preferred text editor")
+        print(f"Please open {LOG_FILE_PATH} manually in your preferred text editor")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Radiolytics Fingerprint Matcher CLI")

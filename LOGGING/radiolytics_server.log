@@ -1,204 +1,45 @@
-=== Log Cleared for New Run ===
-2025-05-27 15:09:13,753 | INFO     | Initialized FingerprintMatcher with threshold 0.25 and min frames 10
-2025-05-27 15:09:13,754 | DEBUG    | Converted retries value: 3 -> Retry(total=3, connect=None, read=None, redirect=None, status=None)
-2025-05-27 15:09:13,754 | INFO     | Started fingerprint matcher
-2025-05-27 15:09:13,756 | DEBUG    | Making request: POST https://oauth2.googleapis.com/token
-2025-05-27 15:09:13,757 | DEBUG    | Starting new HTTPS connection (1): oauth2.googleapis.com:443
-2025-05-27 15:09:14,959 | DEBUG    | https://oauth2.googleapis.com:443 "POST /token HTTP/1.1" 200 None
-2025-05-27 15:09:14,961 | DEBUG    | Starting new HTTPS connection (1): storage.googleapis.com:443
-2025-05-27 15:09:15,868 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 26
-2025-05-27 15:09:15,869 | INFO     | INFO | SCAN | Scanning Firebase for new AppFingerprints...
-2025-05-27 15:09:16,167 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 26
-2025-05-27 15:09:16,167 | WARNING  | INFO | SCAN | No new AppFingerprints found
-2025-05-27 15:09:21,476 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 2205
-2025-05-27 15:09:21,820 | DEBUG    | https://storage.googleapis.com:443 "GET /download/storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F15-09-18_LiveStreamFingerprint_KFM_7s.json?generation=1748351361378673&alt=media HTTP/1.1" 200 4406
-2025-05-27 15:09:21,822 | INFO     | Loaded reference fingerprint for KFM at 1748351358
-2025-05-27 15:09:22,167 | DEBUG    | https://storage.googleapis.com:443 "GET /download/storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F15-09-18_LiveStreamFingerprint_Smile%20FM_7s.json?generation=1748351361170425&alt=media HTTP/1.1" 200 5667
-2025-05-27 15:09:22,170 | INFO     | Loaded reference fingerprint for Smile FM at 1748351358
-2025-05-27 15:09:22,170 | INFO     | INFO | SCAN | Scanning Firebase for new AppFingerprints...
-2025-05-27 15:09:22,474 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 2205
-2025-05-27 15:09:22,475 | WARNING  | INFO | SCAN | No new AppFingerprints found
-2025-05-27 15:09:27,784 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 3304
-2025-05-27 15:09:27,785 | INFO     | INFO | SCAN | Scanning Firebase for new AppFingerprints...
-2025-05-27 15:09:28,093 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 3304
-2025-05-27 15:09:28,095 | INFO     | INFO | PROCESS | Processing fingerprints/15-09-25_AppFingerprint_7s.json (ts=1748351365)
-2025-05-27 15:09:28,412 | DEBUG    | https://storage.googleapis.com:443 "GET /download/storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F15-09-25_AppFingerprint_7s.json?generation=1748351368155927&alt=media HTTP/1.1" 200 4938
-2025-05-27 15:09:28,719 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F15-09-25_AppFingerprint_7s.json/acl?prettyPrint=false HTTP/1.1" 200 2664
-2025-05-27 15:09:29,052 | DEBUG    | https://storage.googleapis.com:443 "PATCH /storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F15-09-25_AppFingerprint_7s.json?projection=full&prettyPrint=false HTTP/1.1" 200 4310
-2025-05-27 15:09:29,053 | INFO     | INFO | PUBLIC | Made fingerprints/15-09-25_AppFingerprint_7s.json public: https://storage.googleapis.com/newbuckettest.firebasestorage.app/fingerprints/15-09-25_AppFingerprint_7s.json
-2025-05-27 15:09:29,055 | INFO     | INFO | SAVE | Saved to D:\_WORK\Radiolytics\radiolytics_server\../LOGGING\fingerprints\15-09-25_AppFingerprint_7s.json
-
-================================================================================
-2025-05-27 15:09:29,056 | INFO     | INFO | REPORT | Starting new fingerprint report for 15-09-25_AppFingerprint_7s.json (ts=1748351365727)
-2025-05-27 15:09:29,056 | INFO     | App fingerprint: 15-09-25_AppFingerprint_7s.json, timestamp: 1748351365727
-2025-05-27 15:09:29,057 | INFO     | App fingerprint: 15-09-25_AppFingerprint_7s.json, timestamp: 1748351365727
-2025-05-27 15:09:29,059 | INFO     | Reference Smile FM_1748351358: 36 valid frames after silence filter
-2025-05-27 15:09:29,059 | INFO     | Reference Smile FM_1748351358: 36 valid frames after silence filter
-2025-05-27 15:09:29,060 | INFO     | Reference KFM_1748351358: 14 valid frames after silence filter
-2025-05-27 15:09:29,060 | INFO     | Reference KFM_1748351358: 14 valid frames after silence filter
-2025-05-27 15:09:29,060 | INFO     | App fingerprint: 106 frames (raw, no scaling)
-2025-05-27 15:09:29,061 | INFO     | App fingerprint: 106 frames (raw, no scaling)
-2025-05-27 15:09:29,061 | INFO     | App features (first 3): [[0.15686017, 0.18741058, 0.010000001, -16.089746], [0.23489073, 0.20402393, 0.01, -12.582683], [0.21862364, 0.22033398, 0.010000001, -13.206058]]
-2025-05-27 15:09:29,061 | INFO     | App features (first 3): [[0.15686017, 0.18741058, 0.010000001, -16.089746], [0.23489073, 0.20402393, 0.01, -12.582683], [0.21862364, 0.22033398, 0.010000001, -13.206058]]
-2025-05-27 15:09:29,062 | INFO     | Reference Smile FM_1748351358 features (first 3): [[0.5774197578430176, 0.5013787860208397, 0.49833279848098755, -4.770167350769043], [0.5742630362510681, 0.49716580394867577, 0.49717336893081665, -4.817782402038574], [0.5671015977859497, 0.5054278086945734, 0.4886794090270996, -4.926782608032227]]
-2025-05-27 15:09:29,062 | INFO     | Reference Smile FM_1748351358 features (first 3): [[0.5774197578430176, 0.5013787860208397, 0.49833279848098755, -4.770167350769043], [0.5742630362510681, 0.49716580394867577, 0.49717336893081665, -4.817782402038574], [0.5671015977859497, 0.5054278086945734, 0.4886794090270996, -4.926782608032227]]
-2025-05-27 15:09:29,066 | INFO     | Reference KFM_1748351358 features (first 3): [[0.5750926733016968, 0.4898265721953899, 0.49283701181411743, -4.805243492126465], [0.5524011254310608, 0.5001074718754676, 0.4663606882095337, -5.154909133911133], [0.5705432295799255, 0.506470283617049, 0.4900723695755005, -4.8742289543151855]]
-2025-05-27 15:09:29,066 | INFO     | Reference KFM_1748351358 features (first 3): [[0.5750926733016968, 0.4898265721953899, 0.49283701181411743, -4.805243492126465], [0.5524011254310608, 0.5001074718754676, 0.4663606882095337, -5.154909133911133], [0.5705432295799255, 0.506470283617049, 0.4900723695755005, -4.8742289543151855]]
-2025-05-27 15:09:31,048 | INFO     | INFO | FIRESTORE | Wrote NO MATCH result
-2025-05-27 15:09:31,048 | INFO     | NO MATCH | 15-09-25_AppFingerprint_7s.json
-2025-05-27 15:09:36,377 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 5406
-2025-05-27 15:09:36,713 | DEBUG    | https://storage.googleapis.com:443 "GET /download/storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F15-09-35_LiveStreamFingerprint_Smile%20FM_7s.json?generation=1748351377273017&alt=media HTTP/1.1" 200 5538
-2025-05-27 15:09:36,715 | INFO     | Loaded reference fingerprint for Smile FM at 1748351375
-2025-05-27 15:09:36,715 | INFO     | INFO | SCAN | Scanning Firebase for new AppFingerprints...
-2025-05-27 15:09:37,030 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 5406
-2025-05-27 15:09:37,032 | INFO     | INFO | PROCESS | Processing fingerprints/15-09-33_AppFingerprint_7s.json (ts=1748351373)
-2025-05-27 15:09:37,362 | DEBUG    | https://storage.googleapis.com:443 "GET /download/storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F15-09-33_AppFingerprint_7s.json?generation=1748351375495662&alt=media HTTP/1.1" 200 5223
-2025-05-27 15:09:37,672 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F15-09-33_AppFingerprint_7s.json/acl?prettyPrint=false HTTP/1.1" 200 2664
-2025-05-27 15:09:38,010 | DEBUG    | https://storage.googleapis.com:443 "PATCH /storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F15-09-33_AppFingerprint_7s.json?projection=full&prettyPrint=false HTTP/1.1" 200 4310
-2025-05-27 15:09:38,012 | INFO     | INFO | PUBLIC | Made fingerprints/15-09-33_AppFingerprint_7s.json public: https://storage.googleapis.com/newbuckettest.firebasestorage.app/fingerprints/15-09-33_AppFingerprint_7s.json
-2025-05-27 15:09:38,014 | INFO     | INFO | SAVE | Saved to D:\_WORK\Radiolytics\radiolytics_server\../LOGGING\fingerprints\15-09-33_AppFingerprint_7s.json
-
-================================================================================
-2025-05-27 15:09:38,014 | INFO     | INFO | REPORT | Starting new fingerprint report for 15-09-33_AppFingerprint_7s.json (ts=1748351373000)
-2025-05-27 15:09:38,014 | INFO     | App fingerprint: 15-09-33_AppFingerprint_7s.json, timestamp: 1748351373000
-2025-05-27 15:09:38,014 | INFO     | App fingerprint: 15-09-33_AppFingerprint_7s.json, timestamp: 1748351373000
-2025-05-27 15:09:38,015 | INFO     | Reference Smile FM_1748351358: 36 valid frames after silence filter
-2025-05-27 15:09:38,015 | INFO     | Reference Smile FM_1748351358: 36 valid frames after silence filter
-2025-05-27 15:09:38,015 | INFO     | Reference Smile FM_1748351375: 34 valid frames after silence filter
-2025-05-27 15:09:38,015 | INFO     | Reference Smile FM_1748351375: 34 valid frames after silence filter
-2025-05-27 15:09:38,016 | INFO     | Reference KFM_1748351358: 14 valid frames after silence filter
-2025-05-27 15:09:38,016 | INFO     | Reference KFM_1748351358: 14 valid frames after silence filter
-2025-05-27 15:09:38,016 | INFO     | App fingerprint: 114 frames (raw, no scaling)
-2025-05-27 15:09:38,016 | INFO     | App fingerprint: 114 frames (raw, no scaling)
-2025-05-27 15:09:38,016 | INFO     | App features (first 3): [[0.010241349, 0.200777, 0.0100000035, -39.79286], [0.2269119, 0.18576159, 0.010000001, -12.882854], [0.2390964, 0.18816805, 0.010000001, -12.428539]]
-2025-05-27 15:09:38,016 | INFO     | App features (first 3): [[0.010241349, 0.200777, 0.0100000035, -39.79286], [0.2269119, 0.18576159, 0.010000001, -12.882854], [0.2390964, 0.18816805, 0.010000001, -12.428539]]
-2025-05-27 15:09:38,016 | INFO     | Reference Smile FM_1748351358 features (first 3): [[0.5774197578430176, 0.5013787860208397, 0.49833279848098755, -4.770167350769043], [0.5742630362510681, 0.49716580394867577, 0.49717336893081665, -4.817782402038574], [0.5671015977859497, 0.5054278086945734, 0.4886794090270996, -4.926782608032227]]
-2025-05-27 15:09:38,017 | INFO     | Reference Smile FM_1748351358 features (first 3): [[0.5774197578430176, 0.5013787860208397, 0.49833279848098755, -4.770167350769043], [0.5742630362510681, 0.49716580394867577, 0.49717336893081665, -4.817782402038574], [0.5671015977859497, 0.5054278086945734, 0.4886794090270996, -4.926782608032227]]
-2025-05-27 15:09:38,017 | INFO     | Reference Smile FM_1748351375 features (first 3): [[0.5793099403381348, 0.4977804132379785, 0.5020899772644043, -4.7417802810668945], [0.5652520060539246, 0.5035956190422796, 0.4861927330493927, -4.95515775680542], [0.5838431715965271, 0.4985789981359, 0.5030067563056946, -4.674076080322266]]
-2025-05-27 15:09:38,017 | INFO     | Reference Smile FM_1748351375 features (first 3): [[0.5793099403381348, 0.4977804132379785, 0.5020899772644043, -4.7417802810668945], [0.5652520060539246, 0.5035956190422796, 0.4861927330493927, -4.95515775680542], [0.5838431715965271, 0.4985789981359, 0.5030067563056946, -4.674076080322266]]
-2025-05-27 15:09:38,018 | INFO     | Reference KFM_1748351358 features (first 3): [[0.5750926733016968, 0.4898265721953899, 0.49283701181411743, -4.805243492126465], [0.5524011254310608, 0.5001074718754676, 0.4663606882095337, -5.154909133911133], [0.5705432295799255, 0.506470283617049, 0.4900723695755005, -4.8742289543151855]]
-2025-05-27 15:09:38,018 | INFO     | Reference KFM_1748351358 features (first 3): [[0.5750926733016968, 0.4898265721953899, 0.49283701181411743, -4.805243492126465], [0.5524011254310608, 0.5001074718754676, 0.4663606882095337, -5.154909133911133], [0.5705432295799255, 0.506470283617049, 0.4900723695755005, -4.8742289543151855]]
-2025-05-27 15:09:38,354 | INFO     | INFO | FIRESTORE | Wrote NO MATCH result
-2025-05-27 15:09:38,355 | INFO     | NO MATCH | 15-09-33_AppFingerprint_7s.json
-2025-05-27 15:09:43,695 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 7671
-2025-05-27 15:09:44,040 | DEBUG    | https://storage.googleapis.com:443 "GET /download/storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F15-09-37_LiveStreamFingerprint_KFM_7s.json?generation=1748351378927928&alt=media HTTP/1.1" 200 4404
-2025-05-27 15:09:44,041 | INFO     | Loaded reference fingerprint for KFM at 1748351377
-2025-05-27 15:09:44,042 | INFO     | INFO | SCAN | Scanning Firebase for new AppFingerprints...
-2025-05-27 15:09:44,375 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 7671
-2025-05-27 15:09:44,379 | INFO     | INFO | PROCESS | Processing fingerprints/15-09-40_AppFingerprint_7s.json (ts=1748351380)
-2025-05-27 15:09:44,715 | DEBUG    | https://storage.googleapis.com:443 "GET /download/storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F15-09-40_AppFingerprint_7s.json?generation=1748351382398404&alt=media HTTP/1.1" 200 4820
-2025-05-27 15:09:45,024 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F15-09-40_AppFingerprint_7s.json/acl?prettyPrint=false HTTP/1.1" 200 2664
-2025-05-27 15:09:45,352 | DEBUG    | https://storage.googleapis.com:443 "PATCH /storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F15-09-40_AppFingerprint_7s.json?projection=full&prettyPrint=false HTTP/1.1" 200 4310
-2025-05-27 15:09:45,354 | INFO     | INFO | PUBLIC | Made fingerprints/15-09-40_AppFingerprint_7s.json public: https://storage.googleapis.com/newbuckettest.firebasestorage.app/fingerprints/15-09-40_AppFingerprint_7s.json
-2025-05-27 15:09:45,356 | INFO     | INFO | SAVE | Saved to D:\_WORK\Radiolytics\radiolytics_server\../LOGGING\fingerprints\15-09-40_AppFingerprint_7s.json
-
-================================================================================
-2025-05-27 15:09:45,357 | INFO     | INFO | REPORT | Starting new fingerprint report for 15-09-40_AppFingerprint_7s.json (ts=1748351380192)
-2025-05-27 15:09:45,357 | INFO     | App fingerprint: 15-09-40_AppFingerprint_7s.json, timestamp: 1748351380192
-2025-05-27 15:09:45,357 | INFO     | App fingerprint: 15-09-40_AppFingerprint_7s.json, timestamp: 1748351380192
-2025-05-27 15:09:45,357 | INFO     | Reference Smile FM_1748351358: 36 valid frames after silence filter
-2025-05-27 15:09:45,357 | INFO     | Reference Smile FM_1748351358: 36 valid frames after silence filter
-2025-05-27 15:09:45,357 | INFO     | Reference Smile FM_1748351375: 34 valid frames after silence filter
-2025-05-27 15:09:45,357 | INFO     | Reference Smile FM_1748351375: 34 valid frames after silence filter
-2025-05-27 15:09:45,357 | INFO     | Reference KFM_1748351358: 14 valid frames after silence filter
-2025-05-27 15:09:45,357 | INFO     | Reference KFM_1748351358: 14 valid frames after silence filter
-2025-05-27 15:09:45,358 | INFO     | Reference KFM_1748351377: 14 valid frames after silence filter
-2025-05-27 15:09:45,358 | INFO     | Reference KFM_1748351377: 14 valid frames after silence filter
-2025-05-27 15:09:45,358 | INFO     | App fingerprint: 105 frames (raw, no scaling)
-2025-05-27 15:09:45,358 | INFO     | App fingerprint: 105 frames (raw, no scaling)
-2025-05-27 15:09:45,358 | INFO     | App features (first 3): [[0.0063575082, 0.18237126, 0.009999991, -43.934258], [0.17033857, 0.192281, 0.010000001, -15.37374], [0.19891316, 0.18609765, 0.009999998, -14.02673]]
-2025-05-27 15:09:45,358 | INFO     | App features (first 3): [[0.0063575082, 0.18237126, 0.009999991, -43.934258], [0.17033857, 0.192281, 0.010000001, -15.37374], [0.19891316, 0.18609765, 0.009999998, -14.02673]]
-2025-05-27 15:09:45,358 | INFO     | Reference Smile FM_1748351358 features (first 3): [[0.5774197578430176, 0.5013787860208397, 0.49833279848098755, -4.770167350769043], [0.5742630362510681, 0.49716580394867577, 0.49717336893081665, -4.817782402038574], [0.5671015977859497, 0.5054278086945734, 0.4886794090270996, -4.926782608032227]]
-2025-05-27 15:09:45,358 | INFO     | Reference Smile FM_1748351358 features (first 3): [[0.5774197578430176, 0.5013787860208397, 0.49833279848098755, -4.770167350769043], [0.5742630362510681, 0.49716580394867577, 0.49717336893081665, -4.817782402038574], [0.5671015977859497, 0.5054278086945734, 0.4886794090270996, -4.926782608032227]]
-2025-05-27 15:09:45,359 | INFO     | Reference Smile FM_1748351375 features (first 3): [[0.5793099403381348, 0.4977804132379785, 0.5020899772644043, -4.7417802810668945], [0.5652520060539246, 0.5035956190422796, 0.4861927330493927, -4.95515775680542], [0.5838431715965271, 0.4985789981359, 0.5030067563056946, -4.674076080322266]]
-2025-05-27 15:09:45,359 | INFO     | Reference Smile FM_1748351375 features (first 3): [[0.5793099403381348, 0.4977804132379785, 0.5020899772644043, -4.7417802810668945], [0.5652520060539246, 0.5035956190422796, 0.4861927330493927, -4.95515775680542], [0.5838431715965271, 0.4985789981359, 0.5030067563056946, -4.674076080322266]]
-2025-05-27 15:09:45,359 | INFO     | Reference KFM_1748351358 features (first 3): [[0.5750926733016968, 0.4898265721953899, 0.49283701181411743, -4.805243492126465], [0.5524011254310608, 0.5001074718754676, 0.4663606882095337, -5.154909133911133], [0.5705432295799255, 0.506470283617049, 0.4900723695755005, -4.8742289543151855]]
-2025-05-27 15:09:45,359 | INFO     | Reference KFM_1748351358 features (first 3): [[0.5750926733016968, 0.4898265721953899, 0.49283701181411743, -4.805243492126465], [0.5524011254310608, 0.5001074718754676, 0.4663606882095337, -5.154909133911133], [0.5705432295799255, 0.506470283617049, 0.4900723695755005, -4.8742289543151855]]
-2025-05-27 15:09:45,359 | INFO     | Reference KFM_1748351377 features (first 3): [[0.5644010901451111, 0.4937414866748207, 0.48340365290641785, -4.96824312210083], [0.5748753547668457, 0.5024900248823021, 0.4891594648361206, -4.808526039123535], [0.5639902353286743, 0.5021597708162447, 0.4809163212776184, -4.9745683670043945]]
-2025-05-27 15:09:45,359 | INFO     | Reference KFM_1748351377 features (first 3): [[0.5644010901451111, 0.4937414866748207, 0.48340365290641785, -4.96824312210083], [0.5748753547668457, 0.5024900248823021, 0.4891594648361206, -4.808526039123535], [0.5639902353286743, 0.5021597708162447, 0.4809163212776184, -4.9745683670043945]]
-2025-05-27 15:09:45,701 | INFO     | INFO | FIRESTORE | Wrote NO MATCH result
-2025-05-27 15:09:45,701 | INFO     | NO MATCH | 15-09-40_AppFingerprint_7s.json
-2025-05-27 15:09:51,013 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 8770
-2025-05-27 15:09:51,016 | INFO     | INFO | SCAN | Scanning Firebase for new AppFingerprints...
-2025-05-27 15:09:51,355 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 8770
-2025-05-27 15:09:51,359 | INFO     | INFO | PROCESS | Processing fingerprints/15-09-47_AppFingerprint_7s.json (ts=1748351387)
-2025-05-27 15:09:51,703 | DEBUG    | https://storage.googleapis.com:443 "GET /download/storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F15-09-47_AppFingerprint_7s.json?generation=1748351389465777&alt=media HTTP/1.1" 200 4851
-2025-05-27 15:09:52,015 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F15-09-47_AppFingerprint_7s.json/acl?prettyPrint=false HTTP/1.1" 200 2664
-2025-05-27 15:09:52,348 | DEBUG    | https://storage.googleapis.com:443 "PATCH /storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F15-09-47_AppFingerprint_7s.json?projection=full&prettyPrint=false HTTP/1.1" 200 4310
-2025-05-27 15:09:52,349 | INFO     | INFO | PUBLIC | Made fingerprints/15-09-47_AppFingerprint_7s.json public: https://storage.googleapis.com/newbuckettest.firebasestorage.app/fingerprints/15-09-47_AppFingerprint_7s.json
-2025-05-27 15:09:52,352 | INFO     | INFO | SAVE | Saved to D:\_WORK\Radiolytics\radiolytics_server\../LOGGING\fingerprints\15-09-47_AppFingerprint_7s.json
-
-================================================================================
-2025-05-27 15:09:52,353 | INFO     | INFO | REPORT | Starting new fingerprint report for 15-09-47_AppFingerprint_7s.json (ts=1748351387354)
-2025-05-27 15:09:52,354 | INFO     | App fingerprint: 15-09-47_AppFingerprint_7s.json, timestamp: 1748351387354
-2025-05-27 15:09:52,354 | INFO     | App fingerprint: 15-09-47_AppFingerprint_7s.json, timestamp: 1748351387354
-2025-05-27 15:09:52,354 | INFO     | Reference Smile FM_1748351358: 36 valid frames after silence filter
-2025-05-27 15:09:52,354 | INFO     | Reference Smile FM_1748351358: 36 valid frames after silence filter
-2025-05-27 15:09:52,355 | INFO     | Reference Smile FM_1748351375: 34 valid frames after silence filter
-2025-05-27 15:09:52,356 | INFO     | Reference Smile FM_1748351375: 34 valid frames after silence filter
-2025-05-27 15:09:52,356 | INFO     | Reference KFM_1748351358: 14 valid frames after silence filter
-2025-05-27 15:09:52,356 | INFO     | Reference KFM_1748351358: 14 valid frames after silence filter
-2025-05-27 15:09:52,356 | INFO     | Reference KFM_1748351377: 14 valid frames after silence filter
-2025-05-27 15:09:52,357 | INFO     | Reference KFM_1748351377: 14 valid frames after silence filter
-2025-05-27 15:09:52,357 | INFO     | App fingerprint: 105 frames (raw, no scaling)
-2025-05-27 15:09:52,357 | INFO     | App fingerprint: 105 frames (raw, no scaling)
-2025-05-27 15:09:52,357 | INFO     | App features (first 3): [[0.16365181, 0.22889034, 0.009999999, -15.721583], [0.20730199, 0.21537623, 0.010000001, -13.667931], [0.17529297, 0.20919256, 0.01, -15.12471]]
-2025-05-27 15:09:52,357 | INFO     | App features (first 3): [[0.16365181, 0.22889034, 0.009999999, -15.721583], [0.20730199, 0.21537623, 0.010000001, -13.667931], [0.17529297, 0.20919256, 0.01, -15.12471]]
-2025-05-27 15:09:52,358 | INFO     | Reference Smile FM_1748351358 features (first 3): [[0.5774197578430176, 0.5013787860208397, 0.49833279848098755, -4.770167350769043], [0.5742630362510681, 0.49716580394867577, 0.49717336893081665, -4.817782402038574], [0.5671015977859497, 0.5054278086945734, 0.4886794090270996, -4.926782608032227]]
-2025-05-27 15:09:52,358 | INFO     | Reference Smile FM_1748351358 features (first 3): [[0.5774197578430176, 0.5013787860208397, 0.49833279848098755, -4.770167350769043], [0.5742630362510681, 0.49716580394867577, 0.49717336893081665, -4.817782402038574], [0.5671015977859497, 0.5054278086945734, 0.4886794090270996, -4.926782608032227]]
-2025-05-27 15:09:52,358 | INFO     | Reference Smile FM_1748351375 features (first 3): [[0.5793099403381348, 0.4977804132379785, 0.5020899772644043, -4.7417802810668945], [0.5652520060539246, 0.5035956190422796, 0.4861927330493927, -4.95515775680542], [0.5838431715965271, 0.4985789981359, 0.5030067563056946, -4.674076080322266]]
-2025-05-27 15:09:52,358 | INFO     | Reference Smile FM_1748351375 features (first 3): [[0.5793099403381348, 0.4977804132379785, 0.5020899772644043, -4.7417802810668945], [0.5652520060539246, 0.5035956190422796, 0.4861927330493927, -4.95515775680542], [0.5838431715965271, 0.4985789981359, 0.5030067563056946, -4.674076080322266]]
-2025-05-27 15:09:52,358 | INFO     | Reference KFM_1748351358 features (first 3): [[0.5750926733016968, 0.4898265721953899, 0.49283701181411743, -4.805243492126465], [0.5524011254310608, 0.5001074718754676, 0.4663606882095337, -5.154909133911133], [0.5705432295799255, 0.506470283617049, 0.4900723695755005, -4.8742289543151855]]
-2025-05-27 15:09:52,358 | INFO     | Reference KFM_1748351358 features (first 3): [[0.5750926733016968, 0.4898265721953899, 0.49283701181411743, -4.805243492126465], [0.5524011254310608, 0.5001074718754676, 0.4663606882095337, -5.154909133911133], [0.5705432295799255, 0.506470283617049, 0.4900723695755005, -4.8742289543151855]]
-2025-05-27 15:09:52,358 | INFO     | Reference KFM_1748351377 features (first 3): [[0.5644010901451111, 0.4937414866748207, 0.48340365290641785, -4.96824312210083], [0.5748753547668457, 0.5024900248823021, 0.4891594648361206, -4.808526039123535], [0.5639902353286743, 0.5021597708162447, 0.4809163212776184, -4.9745683670043945]]
-2025-05-27 15:09:52,358 | INFO     | Reference KFM_1748351377 features (first 3): [[0.5644010901451111, 0.4937414866748207, 0.48340365290641785, -4.96824312210083], [0.5748753547668457, 0.5024900248823021, 0.4891594648361206, -4.808526039123535], [0.5639902353286743, 0.5021597708162447, 0.4809163212776184, -4.9745683670043945]]
-2025-05-27 15:09:52,678 | INFO     | INFO | FIRESTORE | Wrote NO MATCH result
-2025-05-27 15:09:52,679 | INFO     | NO MATCH | 15-09-47_AppFingerprint_7s.json
-2025-05-27 15:09:58,038 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 12038
-2025-05-27 15:09:58,365 | DEBUG    | https://storage.googleapis.com:443 "GET /download/storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F15-09-53_LiveStreamFingerprint_KFM_7s.json?generation=1748351395176026&alt=media HTTP/1.1" 200 4404
-2025-05-27 15:09:58,367 | INFO     | Loaded reference fingerprint for KFM at 1748351393
-2025-05-27 15:09:58,697 | DEBUG    | https://storage.googleapis.com:443 "GET /download/storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F15-09-53_LiveStreamFingerprint_Smile%20FM_7s.json?generation=1748351394747346&alt=media HTTP/1.1" 200 5499
-2025-05-27 15:09:58,699 | INFO     | Loaded reference fingerprint for Smile FM at 1748351393
-2025-05-27 15:09:58,700 | INFO     | INFO | SCAN | Scanning Firebase for new AppFingerprints...
-2025-05-27 15:09:59,099 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 12038
-2025-05-27 15:09:59,105 | INFO     | INFO | PROCESS | Processing fingerprints/15-09-54_AppFingerprint_7s.json (ts=1748351394)
-2025-05-27 15:09:59,460 | DEBUG    | https://storage.googleapis.com:443 "GET /download/storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F15-09-54_AppFingerprint_7s.json?generation=1748351396668611&alt=media HTTP/1.1" 200 4819
-2025-05-27 15:09:59,795 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F15-09-54_AppFingerprint_7s.json/acl?prettyPrint=false HTTP/1.1" 200 2664
-2025-05-27 15:10:00,119 | DEBUG    | https://storage.googleapis.com:443 "PATCH /storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F15-09-54_AppFingerprint_7s.json?projection=full&prettyPrint=false HTTP/1.1" 200 4310
-2025-05-27 15:10:00,120 | INFO     | INFO | PUBLIC | Made fingerprints/15-09-54_AppFingerprint_7s.json public: https://storage.googleapis.com/newbuckettest.firebasestorage.app/fingerprints/15-09-54_AppFingerprint_7s.json
-2025-05-27 15:10:00,123 | INFO     | INFO | SAVE | Saved to D:\_WORK\Radiolytics\radiolytics_server\../LOGGING\fingerprints\15-09-54_AppFingerprint_7s.json
-
-================================================================================
-2025-05-27 15:10:00,124 | INFO     | INFO | REPORT | Starting new fingerprint report for 15-09-54_AppFingerprint_7s.json (ts=1748351394552)
-2025-05-27 15:10:00,124 | INFO     | App fingerprint: 15-09-54_AppFingerprint_7s.json, timestamp: 1748351394552
-2025-05-27 15:10:00,124 | INFO     | App fingerprint: 15-09-54_AppFingerprint_7s.json, timestamp: 1748351394552
-2025-05-27 15:10:00,125 | INFO     | Reference Smile FM_1748351358: 36 valid frames after silence filter
-2025-05-27 15:10:00,125 | INFO     | Reference Smile FM_1748351358: 36 valid frames after silence filter
-2025-05-27 15:10:00,125 | INFO     | Reference Smile FM_1748351375: 34 valid frames after silence filter
-2025-05-27 15:10:00,125 | INFO     | Reference Smile FM_1748351375: 34 valid frames after silence filter
-2025-05-27 15:10:00,125 | INFO     | Reference Smile FM_1748351393: 33 valid frames after silence filter
-2025-05-27 15:10:00,126 | INFO     | Reference Smile FM_1748351393: 33 valid frames after silence filter
-2025-05-27 15:10:00,126 | INFO     | Reference KFM_1748351358: 14 valid frames after silence filter
-2025-05-27 15:10:00,126 | INFO     | Reference KFM_1748351358: 14 valid frames after silence filter
-2025-05-27 15:10:00,126 | INFO     | Reference KFM_1748351377: 14 valid frames after silence filter
-2025-05-27 15:10:00,126 | INFO     | Reference KFM_1748351377: 14 valid frames after silence filter
-2025-05-27 15:10:00,126 | INFO     | Reference KFM_1748351393: 14 valid frames after silence filter
-2025-05-27 15:10:00,127 | INFO     | Reference KFM_1748351393: 14 valid frames after silence filter
-2025-05-27 15:10:00,127 | INFO     | App fingerprint: 105 frames (raw, no scaling)
-2025-05-27 15:10:00,127 | INFO     | App fingerprint: 105 frames (raw, no scaling)
-2025-05-27 15:10:00,127 | INFO     | App features (first 3): [[0.007533181, 0.20334718, 0.010000004, -42.460434], [0.21160565, 0.22005135, 0.010000002, -13.489455], [0.24071097, 0.2069326, 0.01, -12.370082]]
-2025-05-27 15:10:00,127 | INFO     | App features (first 3): [[0.007533181, 0.20334718, 0.010000004, -42.460434], [0.21160565, 0.22005135, 0.010000002, -13.489455], [0.24071097, 0.2069326, 0.01, -12.370082]]
-2025-05-27 15:10:00,128 | INFO     | Reference Smile FM_1748351358 features (first 3): [[0.5774197578430176, 0.5013787860208397, 0.49833279848098755, -4.770167350769043], [0.5742630362510681, 0.49716580394867577, 0.49717336893081665, -4.817782402038574], [0.5671015977859497, 0.5054278086945734, 0.4886794090270996, -4.926782608032227]]
-2025-05-27 15:10:00,128 | INFO     | Reference Smile FM_1748351358 features (first 3): [[0.5774197578430176, 0.5013787860208397, 0.49833279848098755, -4.770167350769043], [0.5742630362510681, 0.49716580394867577, 0.49717336893081665, -4.817782402038574], [0.5671015977859497, 0.5054278086945734, 0.4886794090270996, -4.926782608032227]]
-2025-05-27 15:10:00,128 | INFO     | Reference Smile FM_1748351375 features (first 3): [[0.5793099403381348, 0.4977804132379785, 0.5020899772644043, -4.7417802810668945], [0.5652520060539246, 0.5035956190422796, 0.4861927330493927, -4.95515775680542], [0.5838431715965271, 0.4985789981359, 0.5030067563056946, -4.674076080322266]]
-2025-05-27 15:10:00,129 | INFO     | Reference Smile FM_1748351375 features (first 3): [[0.5793099403381348, 0.4977804132379785, 0.5020899772644043, -4.7417802810668945], [0.5652520060539246, 0.5035956190422796, 0.4861927330493927, -4.95515775680542], [0.5838431715965271, 0.4985789981359, 0.5030067563056946, -4.674076080322266]]
-2025-05-27 15:10:00,129 | INFO     | Reference Smile FM_1748351393 features (first 3): [[0.5714700818061829, 0.5036917089165082, 0.48992234468460083, -4.8601298332214355], [0.5761117935180664, 0.4995192175113405, 0.4957158863544464, -4.789864540100098], [0.5701746940612793, 0.4916149099785008, 0.49019655585289, -4.879841327667236]]
-2025-05-27 15:10:00,129 | INFO     | Reference Smile FM_1748351393 features (first 3): [[0.5714700818061829, 0.5036917089165082, 0.48992234468460083, -4.8601298332214355], [0.5761117935180664, 0.4995192175113405, 0.4957158863544464, -4.789864540100098], [0.5701746940612793, 0.4916149099785008, 0.49019655585289, -4.879841327667236]]
-2025-05-27 15:10:00,130 | INFO     | Reference KFM_1748351358 features (first 3): [[0.5750926733016968, 0.4898265721953899, 0.49283701181411743, -4.805243492126465], [0.5524011254310608, 0.5001074718754676, 0.4663606882095337, -5.154909133911133], [0.5705432295799255, 0.506470283617049, 0.4900723695755005, -4.8742289543151855]]
-2025-05-27 15:10:00,130 | INFO     | Reference KFM_1748351358 features (first 3): [[0.5750926733016968, 0.4898265721953899, 0.49283701181411743, -4.805243492126465], [0.5524011254310608, 0.5001074718754676, 0.4663606882095337, -5.154909133911133], [0.5705432295799255, 0.506470283617049, 0.4900723695755005, -4.8742289543151855]]
-2025-05-27 15:10:00,130 | INFO     | Reference KFM_1748351377 features (first 3): [[0.5644010901451111, 0.4937414866748207, 0.48340365290641785, -4.96824312210083], [0.5748753547668457, 0.5024900248823021, 0.4891594648361206, -4.808526039123535], [0.5639902353286743, 0.5021597708162447, 0.4809163212776184, -4.9745683670043945]]
-2025-05-27 15:10:00,130 | INFO     | Reference KFM_1748351377 features (first 3): [[0.5644010901451111, 0.4937414866748207, 0.48340365290641785, -4.96824312210083], [0.5748753547668457, 0.5024900248823021, 0.4891594648361206, -4.808526039123535], [0.5639902353286743, 0.5021597708162447, 0.4809163212776184, -4.9745683670043945]]
-2025-05-27 15:10:00,130 | INFO     | Reference KFM_1748351393 features (first 3): [[0.5567785501480103, 0.5065259622070523, 0.46937352418899536, -5.086349964141846], [0.5568249821662903, 0.5031369627903104, 0.46988022327423096, -5.085625648498535], [0.5662217736244202, 0.5049809906706819, 0.4864565134048462, -4.940268516540527]]
-2025-05-27 15:10:00,131 | INFO     | Reference KFM_1748351393 features (first 3): [[0.5567785501480103, 0.5065259622070523, 0.46937352418899536, -5.086349964141846], [0.5568249821662903, 0.5031369627903104, 0.46988022327423096, -5.085625648498535], [0.5662217736244202, 0.5049809906706819, 0.4864565134048462, -4.940268516540527]]
-2025-05-27 15:10:00,555 | INFO     | INFO | FIRESTORE | Wrote NO MATCH result
-2025-05-27 15:10:00,556 | INFO     | NO MATCH | 15-09-54_AppFingerprint_7s.json
+2025-05-27 19:40:51,672 | INFO     | Initialized FingerprintMatcher with threshold 0.25 and min frames 10
+2025-05-27 19:40:51,672 | DEBUG    | Converted retries value: 3 -> Retry(total=3, connect=None, read=None, redirect=None, status=None)
+2025-05-27 19:40:51,672 | INFO     | Started fingerprint matcher
+2025-05-27 19:40:51,674 | DEBUG    | Making request: POST https://oauth2.googleapis.com/token
+2025-05-27 19:40:51,675 | DEBUG    | Starting new HTTPS connection (1): oauth2.googleapis.com:443
+2025-05-27 19:40:52,786 | DEBUG    | https://oauth2.googleapis.com:443 "POST /token HTTP/1.1" 200 None
+2025-05-27 19:40:52,788 | DEBUG    | Starting new HTTPS connection (1): storage.googleapis.com:443
+2025-05-27 19:40:53,576 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 26
+2025-05-27 19:40:53,873 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 26
+2025-05-27 19:40:54,175 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 26
+2025-05-27 19:40:59,481 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 2205
+2025-05-27 19:40:59,832 | DEBUG    | https://storage.googleapis.com:443 "GET /download/storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F19-40-51_LiveStreamFingerprint_Smile%20FM_7s.json?generation=1748367656672655&alt=media HTTP/1.1" 200 3565
+2025-05-27 19:40:59,834 | INFO     | Loaded reference fingerprint for Smile FM at 1748367651
+2025-05-27 19:41:00,388 | DEBUG    | https://storage.googleapis.com:443 "GET /download/storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F19-40-57_LiveStreamFingerprint_KFM_7s.json?generation=1748367660895401&alt=media HTTP/1.1" 200 6647
+2025-05-27 19:41:00,392 | INFO     | Loaded reference fingerprint for KFM at 1748367657
+2025-05-27 19:41:00,700 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 2205
+2025-05-27 19:41:01,012 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 2205
+2025-05-27 19:41:06,329 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 3208
+2025-05-27 19:41:06,646 | DEBUG    | https://storage.googleapis.com:443 "GET /download/storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F19-41-05_LiveStreamFingerprint_Smile%20FM_7s.json?generation=1748367667792227&alt=media HTTP/1.1" 200 3567
+2025-05-27 19:41:06,648 | INFO     | Loaded reference fingerprint for Smile FM at 1748367665
+2025-05-27 19:41:06,952 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 3208
+2025-05-27 19:41:07,257 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 3304
+2025-05-27 19:41:12,554 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 3304
+2025-05-27 19:41:12,859 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 3304
+2025-05-27 19:41:13,171 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 3304
+2025-05-27 19:41:18,511 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 5473
+2025-05-27 19:41:18,859 | DEBUG    | https://storage.googleapis.com:443 "GET /download/storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F19-41-15_LiveStreamFingerprint_KFM_7s.json?generation=1748367677976955&alt=media HTTP/1.1" 200 6661
+2025-05-27 19:41:18,863 | INFO     | Loaded reference fingerprint for KFM at 1748367675
+2025-05-27 19:41:19,184 | DEBUG    | https://storage.googleapis.com:443 "GET /download/storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F19-41-16_LiveStreamFingerprint_Smile%20FM_7s.json?generation=1748367678909704&alt=media HTTP/1.1" 200 3568
+2025-05-27 19:41:19,185 | INFO     | Loaded reference fingerprint for Smile FM at 1748367676
+2025-05-27 19:41:19,509 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 5473
+2025-05-27 19:41:19,846 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 5473
+2025-05-27 19:41:25,175 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 5473
+2025-05-27 19:41:25,502 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 5473
+2025-05-27 19:41:25,827 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 5473
+2025-05-27 19:41:31,157 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 6572
+2025-05-27 19:41:31,479 | DEBUG    | https://storage.googleapis.com:443 "GET /download/storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F19-41-28_LiveStreamFingerprint_Smile%20FM_7s.json?generation=1748367690561270&alt=media HTTP/1.1" 200 3566
+2025-05-27 19:41:31,480 | INFO     | Loaded reference fingerprint for Smile FM at 1748367688
+2025-05-27 19:41:31,801 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 6572
+2025-05-27 19:41:32,126 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 6572
+2025-05-27 19:41:37,472 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 7642
+2025-05-27 19:41:37,810 | DEBUG    | https://storage.googleapis.com:443 "GET /download/storage/v1/b/newbuckettest.firebasestorage.app/o/fingerprints%2F19-41-33_LiveStreamFingerprint_KFM_7s.json?generation=1748367695570192&alt=media HTTP/1.1" 200 6662
+2025-05-27 19:41:37,814 | INFO     | Loaded reference fingerprint for KFM at 1748367693
+2025-05-27 19:41:38,159 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 7642
+2025-05-27 19:41:38,500 | DEBUG    | https://storage.googleapis.com:443 "GET /storage/v1/b/newbuckettest.firebasestorage.app/o?projection=noAcl&prefix=fingerprints%2F&prettyPrint=false HTTP/1.1" 200 7642

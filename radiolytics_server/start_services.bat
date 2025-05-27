@@ -25,6 +25,14 @@ if not exist fingerprint_matcher.py (
     exit /b 1
 )
 
+:: Set absolute logcat output path
+set LOGGING_DIR=%~dp0..\LOGGING
+set LOGCAT_PATH=%LOGGING_DIR%\logcat.txt
+
+:: Clear and start logcat capture
+adb logcat -c
+start /min "Radiolytics Logcat" cmd /c "adb logcat > %LOGCAT_PATH%"
+
 :: Run the fingerprint indexer in this window (quick summary)
 echo Indexing fingerprints...
 python fingerprint_indexer.py --index --root "../ADMIN DO NOT COMMIT/fingerprints/"
