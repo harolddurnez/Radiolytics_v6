@@ -12,6 +12,8 @@ import threading
 from collections import deque
 from dotenv import load_dotenv
 import importlib
+import wave
+import subprocess
 
 # --- CONFIGURATION ---
 RECORDING_INTERVAL = 7 # seconds
@@ -117,56 +119,43 @@ class RadioStreamRecorder:
                 time.sleep(5)  # Wait before retrying
 
     def _capture_audio(self):
-        """Capture 10 seconds of audio from the stream"""
+        """Capture 7 seconds of audio from the stream using ffmpeg subprocess for robust streaming."""
         try:
-            if self.station_name == "KFM":
-                logger.info("[KFM] Using ffmpeg-based fallback pipeline for audio capture.")
-                try:
-                    rsc_mod = importlib.import_module('radiolytics_server.radio_stream_capture')
-                    RadioStreamCapture = getattr(rsc_mod, 'RadioStreamCapture')
-                    capture = RadioStreamCapture(self.stream_url, self.station_name, self.headers, buffer_seconds=RECORDING_INTERVAL)
-                    # Run capture for one interval, then get the latest fingerprint
-                    capture.start()
-                    time.sleep(RECORDING_INTERVAL + 2)  # Give it time to buffer/process
-                    capture.stop()
-                    fps = capture.get_fingerprints()
-                    if fps:
-                        logger.info(f"[KFM] FFMPEG fallback: Got {len(fps[-1][1])} frames from fallback pipeline.")
-                        return np.array([f for f in fps[-1][1]]).flatten()
-                    else:
-                        logger.error("[KFM] FFMPEG fallback: No frames captured.")
-                        return None
-                except Exception as e:
-                    logger.error(f"[KFM] FFMPEG fallback error: {e}")
-                    # If fallback fails, continue to normal pipeline
-            buffer = BytesIO()
-            start_time = time.time()
-            response = requests.get(self.stream_url, stream=True, headers=self.headers)
-            if response.status_code != 200:
-                logger.error(f"Failed to connect to stream: {response.status_code}")
-                return None
-            chunk_count = 0
-            while True:
-                chunk = next(response.iter_content(chunk_size=self.CHUNK_SIZE), None)
-                if not self.is_running or chunk is None:
-                    logger.info(f"[{self.station_name}] Stopping capture loop. is_running={self.is_running}, chunk={chunk}")
+            ffmpeg_cmd = [
+                'ffmpeg',
+                '-loglevel', 'error',
+                '-i', self.stream_url,
+                '-t', str(RECORDING_INTERVAL),
+                '-ar', str(self.SAMPLE_RATE),
+                '-ac', '1',
+                '-f', 's16le',
+                '-vn',
+                'pipe:1'
+            ]
+            logger.info(f"Launching ffmpeg: {' '.join(ffmpeg_cmd)}")
+            proc = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            num_samples = self.SAMPLE_RATE * RECORDING_INTERVAL
+            num_bytes = num_samples * 2  # 16-bit PCM
+            raw_audio = b''
+            while len(raw_audio) < num_bytes:
+                chunk = proc.stdout.read(num_bytes - len(raw_audio))
+                if not chunk:
                     break
-                buffer.write(chunk)
-                chunk_count += 1
-                logger.info(f"[{self.station_name}] Chunk {chunk_count}: size={len(chunk)} buffer_size={buffer.tell()}")
-                if buffer.tell() >= self.buffer_size or (time.time() - start_time) >= RECORDING_INTERVAL:
-                    break
-            buffer.seek(0)
-            audio_data = np.frombuffer(buffer.read(), dtype=np.int16).astype(np.float32) / 32768.0
-            logger.info(f"[{self.station_name}] Finished capture: {chunk_count} chunks, {len(audio_data)} samples.")
-            if len(audio_data) > self.buffer_size:
-                audio_data = audio_data[:self.buffer_size]
-            elif len(audio_data) < self.buffer_size:
-                audio_data = np.pad(audio_data, (0, self.buffer_size - len(audio_data)))
-            logger.info(f"[{self.station_name}] Audio data after padding: {audio_data[:10]} ... (total {len(audio_data)})")
+                raw_audio += chunk
+            proc.stdout.close()
+            proc.wait()
+            if len(raw_audio) < num_bytes:
+                logger.warning(f"ffmpeg: Only got {len(raw_audio)} bytes, expected {num_bytes}. Padding with zeros.")
+                raw_audio += b'\x00' * (num_bytes - len(raw_audio))
+            elif len(raw_audio) > num_bytes:
+                raw_audio = raw_audio[:num_bytes]
+            audio_data = np.frombuffer(raw_audio, dtype=np.int16).astype(np.float32) / 32768.0
+            logger.info(f"ffmpeg: Read {len(audio_data)} samples from stream.")
+            self._last_audio_data = audio_data
             return audio_data
         except Exception as e:
-            logger.error(f"Error capturing audio: {str(e)}")
+            logger.error(f"Error capturing audio with ffmpeg: {str(e)}")
+            self._last_audio_data = None
             return None
 
     def _generate_fingerprint(self, audio_data):
@@ -226,11 +215,24 @@ class RadioStreamRecorder:
                         "max": float(np.max(fp_np[:, i]))
                     }
                 logger.info(f"Feature stats for {self.station_name} fingerprint: {json.dumps(stats)}")
-                # Count valid frames (not all zero, dB > -150)
-                valid_mask = np.logical_and(np.any(fp_np[:, :3] != 0, axis=1), fp_np[:, 3] > -150)
+                # Count valid frames (not all zero, dB > -155)
+                valid_mask = np.logical_and(np.any(fp_np[:, :3] != 0, axis=1), fp_np[:, 3] > -155)
                 num_valid = int(np.sum(valid_mask))
                 logger.info(f"Valid frames for {self.station_name} fingerprint: {num_valid} / {len(fingerprint)}")
-                if num_valid >= 0.9 * len(fingerprint):
+                # Log large continuous silent regions (optional)
+                silent_mask = ~valid_mask
+                max_silent = 0
+                current = 0
+                for v in silent_mask:
+                    if v:
+                        current += 1
+                        if current > max_silent:
+                            max_silent = current
+                    else:
+                        current = 0
+                if max_silent > 10:
+                    logger.warning(f"LARGE SILENT REGION: {max_silent} consecutive silent frames in {self.station_name} fingerprint.")
+                if num_valid >= 0.75 * len(fingerprint):
                     logger.info(f"HEALTHY: {self.station_name} reference extraction: {num_valid} valid frames out of {len(fingerprint)}")
                 else:
                     logger.warning(f"UNHEALTHY: {self.station_name} reference extraction: only {num_valid} valid frames out of {len(fingerprint)}")
@@ -243,11 +245,10 @@ class RadioStreamRecorder:
             return None
 
     def _save_fingerprint(self, fingerprint, timestamp):
-        """Save fingerprint to Firebase Storage and local directory"""
+        """Save fingerprint to Firebase Storage and local directory, and save audio as WAV"""
         try:
             if fingerprint is None:
                 return
-            
             # Create JSON with metadata
             data = {
                 "timestamp": timestamp,
@@ -256,15 +257,12 @@ class RadioStreamRecorder:
                 "sample_rate": self.SAMPLE_RATE,
                 "channels": self.CHANNELS
             }
-            
             # Convert to JSON
             json_data = json.dumps(data)
-            
             # Format timestamp as HH-mm-ss
             dt = datetime.fromtimestamp(timestamp)
             time_str = dt.strftime("%H-%M-%S")
             filename = f"{time_str}_LiveStreamFingerprint_{self.station_name}_{RECORDING_INTERVAL}s.json"
-            
             # Upload to Firebase Storage
             blob = bucket.blob(f"fingerprints/{filename}")
             blob.upload_from_string(json_data, content_type='application/json')
@@ -272,7 +270,6 @@ class RadioStreamRecorder:
             blob.patch()  # Save the content_disposition
             blob.make_public()  # Make the blob publicly readable
             logger.info(f"Saved fingerprint for {self.station_name} at {timestamp} - Public URL: {blob.public_url}")
-            
             # Also save locally
             local_dir = FINGERPRINT_OUTPUT_PATH
             os.makedirs(local_dir, exist_ok=True)
@@ -280,10 +277,28 @@ class RadioStreamRecorder:
             with open(local_path, 'w') as f:
                 json.dump({"fingerprint": fingerprint, "timestamp": timestamp, "station": self.station_name}, f)
             logger.info(f"Saved reference fingerprint locally at {local_path}")
-            
+            # --- Save WAV file for inspection ---
+            try:
+                # Retrieve the last captured audio from self._last_audio_data (set in _capture_audio)
+                audio_data = getattr(self, '_last_audio_data', None)
+                if audio_data is not None:
+                    wav_filename = f"{time_str}_LiveStreamAudio_{self.station_name}_{RECORDING_INTERVAL}s.wav"
+                    wav_path = os.path.join(local_dir, wav_filename)
+                    logger.info(f"Writing WAV audio for {self.station_name} to {wav_path}")
+                    with wave.open(wav_path, 'wb') as wf:
+                        wf.setnchannels(1)
+                        wf.setsampwidth(2)  # 16-bit PCM
+                        wf.setframerate(self.SAMPLE_RATE)
+                        audio_int16 = (audio_data * 32767.0).clip(-32768, 32767).astype(np.int16)
+                        wf.writeframes(audio_int16.tobytes())
+                    logger.info(f"Saved WAV audio for inspection at {wav_path}")
+                else:
+                    logger.warning(f"No audio data available to write WAV for {self.station_name} at {time_str}")
+            except Exception as e:
+                logger.error(f"Error writing WAV file for {self.station_name}: {str(e)}")
+            # --- End WAV save ---
             # Clean up old fingerprints
             self._cleanup_old_fingerprints()
-            
         except Exception as e:
             logger.error(f"Error saving fingerprint: {str(e)}")
 

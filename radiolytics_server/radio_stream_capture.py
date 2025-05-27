@@ -11,6 +11,7 @@ import tempfile
 import os
 from collections import deque
 import json
+import wave
 
 class RadioStreamCapture:
     def __init__(self, stream_url, station_name, headers=None, buffer_seconds=60):
@@ -149,6 +150,22 @@ class RadioStreamCapture:
                         self.logger.info(f"[{self.station_name}] SAVED: {num_valid} valid frames out of {len(frames)}")
                         timestamp = int(time.time() * 1000)
                         self._add_fingerprint(frames, timestamp)
+                        # --- Save WAV file for inspection ---
+                        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+                        out_path = os.path.join(project_root, 'LOGGING', 'fingerprints')
+                        os.makedirs(out_path, exist_ok=True)
+                        dt_str = time.strftime('%H-%M-%S')
+                        wav_filename = f"{dt_str}_LiveStreamAudio_{self.station_name}_7s.wav"
+                        wav_path = os.path.join(out_path, wav_filename)
+                        with wave.open(wav_path, 'wb') as wf:
+                            wf.setnchannels(1)
+                            wf.setsampwidth(2)  # 16-bit PCM
+                            wf.setframerate(self.SAMPLE_RATE)
+                            # Convert float32 [-1,1] to int16
+                            audio_int16 = (audio_data * 32767.0).clip(-32768, 32767).astype(np.int16)
+                            wf.writeframes(audio_int16.tobytes())
+                        self.logger.info(f"[{self.station_name}] Saved WAV audio for inspection at {wav_path}")
+                        # --- End WAV save ---
                 else:
                     self.logger.error(f"[{self.station_name}] Could not convert accumulated AAC to WAV.")
                 # Wait before next reference

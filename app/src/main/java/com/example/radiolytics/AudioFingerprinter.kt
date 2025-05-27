@@ -100,7 +100,7 @@ class AudioFingerprinter {
         latestDb = db // Store for monitoring
         
         // Normalize features to match Python backend
-        val normRms = rms // Already in [0,1] for audio
+        val normRms = rms // Already in [0,1] for    audio
         val normCentroid = centroid / (SAMPLE_RATE / 2f) // Normalize by Nyquist frequency
         val normEnergy = energy / FRAME_SIZE // Normalize by frame size
         val normDb = db.toFloat() // Keep dB as is, matching Python backend

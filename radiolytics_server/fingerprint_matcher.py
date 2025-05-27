@@ -341,14 +341,14 @@ class FingerprintMatcher:
                 def debug_logger(msg):
                     debug_log_lines.append(msg)
                     logger.info(msg)
-                    match_logger.info(msg)
+                logger.info(f"CALLING MATCHER for {os.path.basename(blob.name)}")
                 best_match, summary_line = self._find_best_match_with_log(
                     uploaded_fp, 
                     app_fp_filename=os.path.basename(blob.name),
                     app_fp_timestamp=uploaded_ts,
                     debug_logger=debug_logger
                 )
-                
+                logger.info(f"MATCHER COMPLETE for {os.path.basename(blob.name)}")
                 if best_match:
                     match_ts, match_station, similarity, offset = best_match
                     try:
@@ -363,13 +363,11 @@ class FingerprintMatcher:
                         )
                     except Exception as e:
                         logger.error(format_error_log("LOG_ERROR", f"Error logging match: {e}"))
-                        
                     if uploaded_ts > 1e12:  # If in ms, convert to seconds
                         ts_sec = int(uploaded_ts // 1000)
                     else:
                         ts_sec = int(uploaded_ts)
                     time_str = datetime.fromtimestamp(ts_sec).strftime("%H-%M-%S")
-
                     result = {
                         "matched_at": int(time.time() * 1000),
                         "match_timestamp": match_ts,
@@ -378,8 +376,16 @@ class FingerprintMatcher:
                         "debug_log": summary_line,
                         "time_str": time_str  # For easier debugging
                     }
-                    self.db.collection("results").document(time_str).set(result)
-                    logger.info(format_info_log("FIRESTORE", f"Wrote match result: {match_station} (sim={similarity:.3f}) at {time_str}"))
+                    doc_id = str(uploaded_ts)
+                    self.db.collection("results").document(doc_id).set(result)
+                    logger.info(format_info_log("FIRESTORE", f"Wrote match result: {match_station} (sim={similarity:.3f}) at {doc_id}"))
+                    # Also write result to LOGGING/results as JSON
+                    results_dir = os.path.join(LOGGING_DIR, 'results')
+                    os.makedirs(results_dir, exist_ok=True)
+                    result_path = os.path.join(results_dir, f"{doc_id}.json")
+                    with open(result_path, 'w', encoding='utf-8') as f:
+                        json.dump(result, f)
+                    logger.info(f"Wrote match result to {result_path}")
                 else:
                     result = {
                         "matched_at": int(time.time() * 1000),
@@ -387,11 +393,17 @@ class FingerprintMatcher:
                         "confidence": 0.0,
                         "debug_log": summary_line
                     }
-                    self.db.collection("results").document(time_str).set(result)
+                    doc_id = str(uploaded_ts)
+                    self.db.collection("results").document(doc_id).set(result)
                     logger.info(format_info_log("FIRESTORE", "Wrote NO MATCH result"))
-                    
+                    # Also write result to LOGGING/results as JSON
+                    results_dir = os.path.join(LOGGING_DIR, 'results')
+                    os.makedirs(results_dir, exist_ok=True)
+                    result_path = os.path.join(results_dir, f"{doc_id}.json")
+                    with open(result_path, 'w', encoding='utf-8') as f:
+                        json.dump(result, f)
+                    logger.info(f"Wrote NO MATCH result to {result_path}")
                 self.processed_files.add(blob.name)
-                
         except Exception as e:
             logger.error(format_error_log("DOWNLOAD_ERROR", f"Error processing fingerprints: {e}"))
             logger.error("Full error details:", exc_info=True)
@@ -399,101 +411,81 @@ class FingerprintMatcher:
     def _find_best_match_with_log(self, uploaded_fp: List[List[float]], app_fp_filename: str = "", app_fp_timestamp: int = 0, debug_logger=None) -> (Optional[Tuple[int, str, float, int]], str):
         """
         Find the best matching reference fingerprint using sliding window/cross-correlation.
-        Returns (timestamp, station, similarity, offset) for the best match.
-        Logs every comparison, best match, and warnings as requested.
+        Only use non-silent frames (dB > -150 in both app and reference) for similarity.
+        Require at least 10 non-silent overlapping frames to consider a match.
+        Log the number of non-silent frames used for each comparison.
         """
         try:
-            # Log start of new report
             log_report_start(app_fp_filename, app_fp_timestamp)
             if debug_logger:
                 debug_logger(f"App fingerprint: {app_fp_filename}, timestamp: {app_fp_timestamp}")
 
-            # --- Feature scaling function (DISABLED) ---
-            # def scale_features(fp):
-            #     return [[f[0]*0.02, f[1]*0.02, f[2]*0.02, f[3]] for f in fp]
+            all_refs = []
+            for station, fingerprints in self.reference_fingerprints.items():
+                for ref_ts, ref_st, ref_fp in fingerprints:
+                    all_refs.append((ref_ts, ref_st, ref_fp))
 
-            # --- Filter out silence frames from reference fingerprints ---
-            filtered_reference_fps = {}
-            for ref_key, ref_fp_list in self.reference_fingerprints.items():
-                for ref_ts, ref_st, ref_fp in ref_fp_list:
-                    filtered = [f for f in ref_fp if f[3] > -150]
-                    key = f"{ref_st}_{ref_ts}"
-                    # NO SCALING: use raw features
-                    filtered_reference_fps[key] = filtered
-                    if debug_logger:
-                        debug_logger(f"Reference {key}: {len(filtered)} valid frames after silence filter")
-
-            # --- Use raw app fingerprint (NO SCALING) ---
-            raw_app_fp = uploaded_fp
-            if debug_logger:
-                debug_logger(f"App fingerprint: {len(raw_app_fp)} frames (raw, no scaling)")
-
-            # Log ALL feature vectors for app and each reference
-            if debug_logger:
-                debug_logger(f"App features (all): {json.dumps(raw_app_fp)}")
-                for ref_key, ref_fp in filtered_reference_fps.items():
-                    debug_logger(f"Reference {ref_key} features (all): {json.dumps(ref_fp)}")
+            raw_app_fp = np.array(uploaded_fp)
+            if len(raw_app_fp.shape) == 1:
+                raw_app_fp = raw_app_fp.reshape(1, -1)
 
             best_match = None
             best_similarity = float('-inf')
             best_offset = 0
             best_station = None
             best_ref_filename = None
-            uploaded_fp = np.array(uploaded_fp)
-            if len(uploaded_fp.shape) == 1:
-                uploaded_fp = uploaded_fp.reshape(1, -1)
-            
-            # Normalize the uploaded fingerprint once
-            uploaded_norms = np.linalg.norm(uploaded_fp, axis=1) + 1e-10
-            uploaded_normalized = uploaded_fp / uploaded_norms[:, np.newaxis]
-            
-            logger.info(format_info_log("MATCHING", f"Starting match for {app_fp_filename} (ts={app_fp_timestamp})"), 
-                       extra={'fingerprint_id': f"{app_fp_filename}_{app_fp_timestamp}"})
-            
-            for station, fingerprints in self.reference_fingerprints.items():
-                for ref_ts, ref_st, ref_fp in fingerprints:
-                    ref_fp = np.array(ref_fp)
-                    if len(ref_fp.shape) == 1:
-                        ref_fp = ref_fp.reshape(1, -1)
-                    n = len(ref_fp)
-                    m = len(uploaded_fp)
-                    if m > n:
-                        continue
-                    
-                    # Normalize reference fingerprint once
-                    ref_norms = np.linalg.norm(ref_fp, axis=1) + 1e-10
-                    ref_normalized = ref_fp / ref_norms[:, np.newaxis]
-                    
-                    for offset in range(n - m + 1):
-                        window = ref_normalized[offset:offset + m]
-                        sims = np.sum(uploaded_normalized * window, axis=1)
+
+            for ref_ts, ref_st, ref_fp in all_refs:
+                ref_fp = np.array(ref_fp)
+                if len(ref_fp.shape) == 1:
+                    ref_fp = ref_fp.reshape(1, -1)
+                n = len(ref_fp)
+                m = len(raw_app_fp)
+                if m > n or m < self.MIN_FRAMES_MATCH:
+                    continue
+                for offset in range(n - m + 1):
+                    try:
+                        window = ref_fp[offset:offset + m]
+                        # Only use frames where both app and ref dB > -150
+                        app_dbs = raw_app_fp[:, 3]
+                        ref_dbs = window[:, 3]
+                        non_silent_mask = (app_dbs > -150) & (ref_dbs > -150)
+                        num_non_silent = np.sum(non_silent_mask)
+                        if num_non_silent < 10:
+                            logger.info(f"COMPARE | App: {app_fp_filename} | Ref: {ref_ts}_{ref_st} | offset={offset} | SKIP: only {num_non_silent} non-silent frames")
+                            if debug_logger:
+                                debug_logger(f"COMPARE | App: {app_fp_filename} | Ref: {ref_ts}_{ref_st} | offset={offset} | SKIP: only {num_non_silent} non-silent frames")
+                            continue
+                        app_valid = raw_app_fp[non_silent_mask, :]
+                        ref_valid = window[non_silent_mask, :]
+                        # Normalize
+                        app_norms = np.linalg.norm(app_valid, axis=1) + 1e-10
+                        ref_norms = np.linalg.norm(ref_valid, axis=1) + 1e-10
+                        app_normalized = app_valid / app_norms[:, np.newaxis]
+                        ref_normalized = ref_valid / ref_norms[:, np.newaxis]
+                        sims = np.sum(app_normalized * ref_normalized, axis=1)
                         avg_sim = np.mean(sims)
-                        
-                        # Log comparison with better formatting
-                        msg = format_match_log(
-                            app_fp_filename, ref_ts, station, avg_sim, offset,
-                            is_match=(avg_sim >= self.MATCH_THRESHOLD)
-                        )
+                        ref_filename = f"{ref_ts}_{ref_st}"
+                        match_status = "MATCH FOUND" if avg_sim >= self.MATCH_THRESHOLD else "NO MATCH"
+                        logger.info(f"COMPARE | App: {app_fp_filename} | Ref: {ref_filename} | sim={avg_sim:.3f} | offset={offset} | {match_status} | non-silent frames: {num_non_silent}")
                         if debug_logger:
-                            debug_logger(msg)
-                        else:
-                            logger.debug(msg)
-                        
+                            debug_logger(f"COMPARE | App: {app_fp_filename} | Ref: {ref_filename} | sim={avg_sim:.3f} | offset={offset} | {match_status} | non-silent frames: {num_non_silent}")
                         if avg_sim > best_similarity:
                             best_similarity = avg_sim
-                            best_match = (ref_ts, station, avg_sim, offset)
+                            best_match = (ref_ts, ref_st, avg_sim, offset)
                             best_offset = offset
-                            best_station = station
-                            best_ref_filename = f"{ref_ts}_{station}"
-                        
+                            best_station = ref_st
+                            best_ref_filename = ref_filename
                         if avg_sim >= self.MATCH_THRESHOLD:
-                            match_msg = f"MATCH: AppFingerprint {app_fp_filename} (ts={app_fp_timestamp}) best matches Ref ts={ref_ts} (station={station}) with similarity {avg_sim:.4f} at offset {offset}"
+                            match_msg = f"MATCH FOUND: AppFingerprint {app_fp_filename} (ts={app_fp_timestamp}) best matches Ref ts={ref_ts} (station={ref_st}) with similarity {avg_sim:.4f} at offset {offset} using {num_non_silent} non-silent frames"
+                            logger.info(match_msg)
                             if debug_logger:
                                 debug_logger(match_msg)
-                            else:
-                                logger.info(match_msg, extra={'fingerprint_id': f"{app_fp_filename}_{app_fp_timestamp}"})
-                            
-            # End of all comparisons - log summary with separator
+                    except Exception as e:
+                        import traceback
+                        logger.error(f"ERROR during comparison: {e}\n{traceback.format_exc()}")
+                        if debug_logger:
+                            debug_logger(f"ERROR during comparison: {e}\n{traceback.format_exc()}")
             summary = format_summary_log(
                 app_fp_filename, app_fp_timestamp,
                 best_match, best_similarity, best_station, best_offset
@@ -502,21 +494,21 @@ class FingerprintMatcher:
                 debug_logger(summary)
             else:
                 logger.info(summary, extra={'fingerprint_id': f"{app_fp_filename}_{app_fp_timestamp}"})
-            
             if best_match and best_similarity >= self.MATCH_THRESHOLD:
                 return best_match, summary
             else:
-                warn = f"WARNING: No match found for AppFingerprint {app_fp_filename} (ts={app_fp_timestamp}). Best similarity was {best_similarity:.4f} with Ref {best_ref_filename} (station {best_station}) at offset {best_offset}"
+                warn = f"NO MATCH: AppFingerprint {app_fp_filename} (ts={app_fp_timestamp}). Best similarity was {best_similarity:.4f} with Ref {best_ref_filename} (station {best_station}) at offset {best_offset}"
                 summary = f"SUMMARY: AppFingerprint {app_fp_filename} (ts={app_fp_timestamp}) BEST SIMILARITY: {best_similarity:.4f} with Ref {best_ref_filename} (station {best_station}) at offset {best_offset}"
+                logger.info(warn)
                 if debug_logger:
                     debug_logger(warn)
                     debug_logger(summary)
                 else:
-                    logger.warning(warn)
                     logger.info(summary)
                 return None, summary
         except Exception as e:
-            error_msg = format_error_log("MATCH_ERROR", f"Error matching {app_fp_filename}: {str(e)}")
+            import traceback
+            error_msg = format_error_log("MATCH_ERROR", f"Error matching {app_fp_filename}: {str(e)}\n{traceback.format_exc()}")
             logger.error(error_msg, extra={'fingerprint_id': f"{app_fp_filename}_{app_fp_timestamp}"})
             return None, error_msg
 
