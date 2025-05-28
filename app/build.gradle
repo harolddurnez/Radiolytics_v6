@@ -65,6 +65,9 @@ dependencies {
     // JTransforms for FFT
     implementation 'com.github.wendykierp:JTransforms:3.1'
     
+    // TarsosDSP for MFCCs (local JAR)
+    implementation files('libs/core-2.5.jar')
+    
     // Lifecycle and Activity KTX for repeatOnLifecycle and viewModels
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'
     implementation 'androidx.activity:activity-ktx:1.8.2'

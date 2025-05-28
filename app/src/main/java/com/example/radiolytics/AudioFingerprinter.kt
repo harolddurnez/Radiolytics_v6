@@ -8,6 +8,10 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 import org.json.JSONArray
 import org.json.JSONObject
+import kotlin.math.ln
+import be.tarsos.dsp.AudioEvent
+import be.tarsos.dsp.mfcc.MFCC
+import be.tarsos.dsp.io.TarsosDSPAudioFormat
 
 class AudioFingerprinter {
     companion object {
@@ -105,10 +109,109 @@ class AudioFingerprinter {
         val normEnergy = energy / FRAME_SIZE // Normalize by frame size
         val normDb = db.toFloat() // Keep dB as is, matching Python backend
         
-        // Add 4D vector to fingerprint
-        fingerprint.add(floatArrayOf(normRms, normCentroid, normEnergy, normDb))
+        // --- MFCC Extraction ---
+        val mfccs = extractMfccForFrame(floatFrame)
+        // --- End MFCC Extraction ---
+
+        // Add 4D + 13D vector to fingerprint
+        val featureVec = FloatArray(4 + mfccs.size)
+        featureVec[0] = normRms
+        featureVec[1] = normCentroid
+        featureVec[2] = normEnergy
+        featureVec[3] = normDb
+        for (i in mfccs.indices) {
+            featureVec[4 + i] = mfccs[i]
+        }
+        fingerprint.add(featureVec)
         return true
     }
 
     fun getFingerprint(): ByteArray = stopRecording()
+
+    // --- MFCC Helper Functions ---
+    private fun hzToMel(hz: Double): Double = 2595 * kotlin.math.log10(1 + hz / 700.0)
+    private fun melToHz(mel: Double): Double = 700 * ((10.0).pow(mel / 2595) - 1)
+    private fun createMelFilterbank(nMels: Int, nFft: Int, sampleRate: Int): Array<DoubleArray> {
+        val fMin = 0.0
+        val fMax = sampleRate / 2.0
+        val melMin = hzToMel(fMin)
+        val melMax = hzToMel(fMax)
+        val melPoints = DoubleArray(nMels + 2) { i -> melMin + (melMax - melMin) * i / (nMels + 1) }
+        val hzPoints = melPoints.map { melToHz(it) }
+        val bin = hzPoints.map { kotlin.math.floor((nFft + 1) * it / sampleRate).toInt() }
+        val filterbank = Array(nMels) { DoubleArray(nFft / 2) { 0.0 } }
+        for (m in 1..nMels) {
+            val f_m_minus = bin[m - 1]
+            val f_m = bin[m]
+            val f_m_plus = bin[m + 1]
+            for (k in f_m_minus until f_m) {
+                if (k in 0 until nFft / 2) {
+                    filterbank[m - 1][k] = (k - f_m_minus).toDouble() / (f_m - f_m_minus)
+                }
+            }
+            for (k in f_m until f_m_plus) {
+                if (k in 0 until nFft / 2) {
+                    filterbank[m - 1][k] = (f_m_plus - k).toDouble() / (f_m_plus - f_m)
+                }
+            }
+        }
+        return filterbank
+    }
+    private fun dct(input: DoubleArray, nCoeffs: Int): DoubleArray {
+        val N = input.size
+        val result = DoubleArray(nCoeffs)
+        for (k in 0 until nCoeffs) {
+            var sum = 0.0
+            for (n in 0 until N) {
+                sum += input[n] * kotlin.math.cos(Math.PI * k * (2 * n + 1) / (2.0 * N))
+            }
+            result[k] = sum * kotlin.math.sqrt(2.0 / N)
+        }
+        return result
+    }
+
+    fun extractMfccForFrame(
+        floatFrame: FloatArray,
+        sampleRate: Int = 8000,
+        nMfcc: Int = 13,
+        nMelBands: Int = 26
+    ): FloatArray {
+        val mfcc = MFCC(
+            floatFrame.size,          // frameSize (nFFT)
+            sampleRate.toFloat(),     // sampleRate
+            nMfcc,                    // number of MFCCs
+            nMelBands,                // number of Mel bands
+            20f,                      // minFreq (Hz)
+            (sampleRate / 2).toFloat() // maxFreq (Hz)
+        )
+        // Create the audio format (PCM, mono, 32-bit float)
+        val audioFormat = TarsosDSPAudioFormat(
+            sampleRate.toFloat(), // sample rate
+            32,                   // sample size in bits
+            1,                    // channels
+            true,                 // signed
+            false                 // bigEndian
+        )
+        val audioEvent = AudioEvent(audioFormat)
+        audioEvent.setFloatBuffer(floatFrame)
+        mfcc.process(audioEvent)
+        return mfcc.mfcc
+    }
+
+    fun printMfccStats(fingerprint: List<FloatArray>) {
+        if (fingerprint.isEmpty()) return
+        val nMfcc = fingerprint[0].size - 4
+        val mfccMatrix = Array(fingerprint.size) { FloatArray(nMfcc) }
+        for (i in fingerprint.indices) {
+            for (j in 0 until nMfcc) {
+                mfccMatrix[i][j] = fingerprint[i][4 + j]
+            }
+        }
+        for (j in 0 until nMfcc) {
+            val col = mfccMatrix.map { it[j] }
+            val mean = col.average()
+            val std = Math.sqrt(col.map { (it - mean) * (it - mean) }.average())
+            println("MFCC ${j+1}: mean = $mean, std = $std")
+        }
+    }
 } 

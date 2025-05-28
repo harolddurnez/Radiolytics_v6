@@ -12,6 +12,7 @@ import os
 from collections import deque
 import json
 import wave
+import librosa
 
 class RadioStreamCapture:
     def __init__(self, stream_url, station_name, headers=None, buffer_seconds=60):
@@ -175,9 +176,10 @@ class RadioStreamCapture:
                 time.sleep(5)  # Wait before retrying
 
     def _process_audio_chunk(self, audio_data):
-        # Split audio into overlapping frames and extract 4D features per frame
+        # Split audio into overlapping frames and extract features per frame
         frames = []
         step = self.FRAME_SIZE - self.FRAME_OVERLAP
+        n_mfcc = 13  # Number of MFCCs to extract
         for start in range(0, len(audio_data) - self.FRAME_SIZE + 1, step):
             frame = audio_data[start:start+self.FRAME_SIZE]
             if len(frame) < self.FRAME_SIZE:
@@ -201,7 +203,12 @@ class RadioStreamCapture:
             norm_rms = rms
             norm_energy = energy / self.FRAME_SIZE
             norm_db = db.astype(np.float32)
-            frames.append([float(norm_rms), float(norm_centroid), float(norm_energy), float(norm_db)])
+            # MFCCs (librosa expects float32 PCM, shape (n,))
+            mfccs = librosa.feature.mfcc(y=float_frame, sr=self.SAMPLE_RATE, n_mfcc=n_mfcc, n_fft=self.FRAME_SIZE, hop_length=self.FRAME_SIZE)[..., 0]
+            mfccs = mfccs.tolist() if hasattr(mfccs, 'tolist') else list(mfccs)
+            # Compose feature vector
+            feature_vec = [float(norm_rms), float(norm_centroid), float(norm_energy), float(norm_db)] + [float(m) for m in mfccs]
+            frames.append(feature_vec)
         return frames
 
     def _add_fingerprint(self, frames, timestamp):

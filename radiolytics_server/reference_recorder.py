@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 import importlib
 import wave
 import subprocess
+import librosa
 
 # --- CONFIGURATION ---
 RECORDING_INTERVAL = 7 # seconds
@@ -170,6 +171,7 @@ class RadioStreamRecorder:
             
             # Generate fingerprint for each chunk
             fingerprint = []
+            n_mfcc = 13  # Number of MFCCs to extract
             for chunk in chunks:
                 # Calculate RMS energy
                 rms = np.sqrt(np.mean(np.square(chunk)))
@@ -189,10 +191,13 @@ class RadioStreamRecorder:
                 # Calculate decibel (dB) value for the chunk
                 db = 20 * np.log10(rms + 1e-10)  # Add epsilon to avoid log(0)
                 
-                # Create 4D vector (RMS, spectral centroid, energy, dB)
-                frame = [float(rms), float(centroid), float(energy), float(db)]
+                # MFCCs (librosa expects float32 PCM, shape (n,))
+                mfccs = librosa.feature.mfcc(y=chunk, sr=self.SAMPLE_RATE, n_mfcc=n_mfcc, n_fft=self.CHUNK_SIZE, hop_length=self.CHUNK_SIZE)[..., 0]
+                mfccs = mfccs.tolist() if hasattr(mfccs, 'tolist') else list(mfccs)
+                # Create feature vector (RMS, centroid, energy, dB, mfcc1...mfcc13)
+                frame = [float(rms), float(centroid), float(energy), float(db)] + [float(m) for m in mfccs]
                 fingerprint.append(frame)
-                logger.debug(f"Frame dB: {db:.2f}")
+                logger.debug(f"Frame dB: {db:.2f}, MFCCs: {mfccs}")
             
             # Ensure we have the expected number of frames
             if len(fingerprint) > self.frames_per_recording:
@@ -201,14 +206,14 @@ class RadioStreamRecorder:
                 fingerprint = [fingerprint[i] for i in indices]
             elif len(fingerprint) < self.frames_per_recording:
                 # Pad with zeros to match expected count
-                padding = [[0.0, 0.0, 0.0, 0.0]] * (self.frames_per_recording - len(fingerprint))
+                padding = [[0.0] * (4 + n_mfcc)] * (self.frames_per_recording - len(fingerprint))
                 fingerprint.extend(padding)
 
             # --- DEBUG LOGGING: Feature statistics ---
             fp_np = np.array(fingerprint)
             if fp_np.shape[0] > 0:
                 stats = {}
-                for i, name in enumerate(["RMS", "Centroid", "Energy", "dB"]):
+                for i, name in enumerate(["RMS", "Centroid", "Energy", "dB"] + [f"MFCC{i+1}" for i in range(n_mfcc)]):
                     stats[name] = {
                         "mean": float(np.mean(fp_np[:, i])),
                         "min": float(np.min(fp_np[:, i])),
@@ -299,6 +304,7 @@ class RadioStreamRecorder:
             # --- End WAV save ---
             # Clean up old fingerprints
             self._cleanup_old_fingerprints()
+            print_mfcc_stats(fingerprint)
         except Exception as e:
             logger.error(f"Error saving fingerprint: {str(e)}")
 
@@ -346,6 +352,20 @@ def load_station_config():
     except Exception as e:
         logger.error(f"Error loading config: {str(e)}")
         return {}
+
+def print_mfcc_stats(fingerprint):
+    if not fingerprint:
+        return
+    arr = np.array(fingerprint)
+    if arr.shape[1] < 17:
+        print("Not enough features for MFCC stats.")
+        return
+    mfccs = arr[:, -13:]
+    for i in range(13):
+        col = mfccs[:, i]
+        mean = np.mean(col)
+        std = np.std(col)
+        print(f"MFCC {i+1}: mean = {mean:.6f}, std = {std:.6f}")
 
 def main():
     try:

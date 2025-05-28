@@ -128,7 +128,7 @@ def format_error_log(error_type: str, details: str) -> str:
 
 def format_info_log(info_type: str, details: str) -> str:
     """Format an info log message."""
-    return f"ℹ INFO | {info_type} | {details}"
+    return f"[INFO] | {info_type} | {details}"
 
 def log_report_start(app_fp: str, app_ts: int):
     """Log the start of a new fingerprint report."""
@@ -411,9 +411,10 @@ class FingerprintMatcher:
     def _find_best_match_with_log(self, uploaded_fp: List[List[float]], app_fp_filename: str = "", app_fp_timestamp: int = 0, debug_logger=None) -> (Optional[Tuple[int, str, float, int]], str):
         """
         Find the best matching reference fingerprint using sliding window/cross-correlation.
-        Only use non-silent frames (dB > -150 in both app and reference) for similarity.
-        Require at least 10 non-silent overlapping frames to consider a match.
-        Log the number of non-silent frames used for each comparison.
+        Only use non-silent frames (dB > -40 and RMS > 0.02 in both app and reference) for similarity.
+        Use only the last 13 features (MFCCs) of each frame, and standardize them per file.
+        Use cosine similarity for frame-to-frame comparison.
+        Print per-MFCC means and stds for app and both references after normalization.
         """
         try:
             log_report_start(app_fp_filename, app_fp_timestamp)
@@ -429,55 +430,78 @@ class FingerprintMatcher:
             if len(raw_app_fp.shape) == 1:
                 raw_app_fp = raw_app_fp.reshape(1, -1)
 
+            # --- Filter and standardize app MFCCs ---
+            app_rms = raw_app_fp[:, 0]
+            app_db = raw_app_fp[:, 3]
+            app_mask = (app_db > -40) & (app_rms > 0.02)
+            app_mfcc = raw_app_fp[app_mask, -13:]
+            if app_mfcc.shape[0] == 0:
+                if debug_logger:
+                    debug_logger("No non-silent frames in app fingerprint after filtering.")
+                return None, "No non-silent frames in app fingerprint."
+            app_mfcc_mean = app_mfcc.mean(axis=0)
+            app_mfcc_std = app_mfcc.std(axis=0) + 1e-10
+            app_mfcc_norm = (app_mfcc - app_mfcc_mean) / app_mfcc_std
+
+            # Log per-MFCC means and stds for app
+            print_mfcc_stats("App", app_mfcc)
+            if debug_logger:
+                debug_logger(f"App MFCC means: {app_mfcc_mean}")
+                debug_logger(f"App MFCC stds: {app_mfcc_std}")
+
             best_match = None
             best_similarity = float('-inf')
             best_offset = 0
             best_station = None
             best_ref_filename = None
+            best_scores = {}
+            ref_mfcc_stats = {}
 
             for ref_ts, ref_st, ref_fp in all_refs:
                 ref_fp = np.array(ref_fp)
                 if len(ref_fp.shape) == 1:
                     ref_fp = ref_fp.reshape(1, -1)
-                n = len(ref_fp)
-                m = len(raw_app_fp)
+                ref_rms = ref_fp[:, 0]
+                ref_db = ref_fp[:, 3]
+                ref_mask = (ref_db > -40) & (ref_rms > 0.02)
+                ref_mfcc = ref_fp[ref_mask, -13:]
+                if ref_mfcc.shape[0] < 10 or app_mfcc_norm.shape[0] < 10:
+                    continue
+                # Standardize reference MFCCs
+                ref_mfcc_mean = ref_mfcc.mean(axis=0)
+                ref_mfcc_std = ref_mfcc.std(axis=0) + 1e-10
+                ref_mfcc_norm = (ref_mfcc - ref_mfcc_mean) / ref_mfcc_std
+                # Log per-MFCC means and stds for reference
+                ref_mfcc_stats[ref_st] = (ref_mfcc_mean, ref_mfcc_std)
+                n = ref_mfcc_norm.shape[0]
+                m = app_mfcc_norm.shape[0]
                 if m > n or m < self.MIN_FRAMES_MATCH:
                     continue
                 for offset in range(n - m + 1):
                     try:
-                        window = ref_fp[offset:offset + m]
-                        # Only use frames where both app and ref dB > -150
-                        app_dbs = raw_app_fp[:, 3]
-                        ref_dbs = window[:, 3]
-                        non_silent_mask = (app_dbs > -150) & (ref_dbs > -150)
-                        num_non_silent = np.sum(non_silent_mask)
-                        if num_non_silent < 10:
-                            logger.info(f"COMPARE | App: {app_fp_filename} | Ref: {ref_ts}_{ref_st} | offset={offset} | SKIP: only {num_non_silent} non-silent frames")
-                            if debug_logger:
-                                debug_logger(f"COMPARE | App: {app_fp_filename} | Ref: {ref_ts}_{ref_st} | offset={offset} | SKIP: only {num_non_silent} non-silent frames")
-                            continue
-                        app_valid = raw_app_fp[non_silent_mask, :]
-                        ref_valid = window[non_silent_mask, :]
-                        # Normalize
-                        app_norms = np.linalg.norm(app_valid, axis=1) + 1e-10
-                        ref_norms = np.linalg.norm(ref_valid, axis=1) + 1e-10
-                        app_normalized = app_valid / app_norms[:, np.newaxis]
-                        ref_normalized = ref_valid / ref_norms[:, np.newaxis]
-                        sims = np.sum(app_normalized * ref_normalized, axis=1)
-                        avg_sim = np.mean(sims)
+                        window = ref_mfcc_norm[offset:offset + m]
+                        # Cosine similarity per frame
+                        dot = np.sum(app_mfcc_norm * window, axis=1)
+                        app_norms = np.linalg.norm(app_mfcc_norm, axis=1) + 1e-10
+                        ref_norms = np.linalg.norm(window, axis=1) + 1e-10
+                        cos_sims = dot / (app_norms * ref_norms)
+                        avg_sim = np.mean(cos_sims)
                         ref_filename = f"{ref_ts}_{ref_st}"
                         match_status = "MATCH FOUND" if avg_sim >= self.MATCH_THRESHOLD else "NO MATCH"
-                        logger.info(f"COMPARE | App: {app_fp_filename} | Ref: {ref_filename} | sim={avg_sim:.3f} | offset={offset} | {match_status} | non-silent frames: {num_non_silent}")
+                        logger.info(f"COMPARE | App: {app_fp_filename} | Ref: {ref_filename} | sim={avg_sim:.3f} | offset={offset} | {match_status} | non-silent frames: {m}")
                         if debug_logger:
-                            debug_logger(f"COMPARE | App: {app_fp_filename} | Ref: {ref_filename} | sim={avg_sim:.3f} | offset={offset} | {match_status} | non-silent frames: {num_non_silent}")
+                            debug_logger(f"COMPARE | App: {app_fp_filename} | Ref: {ref_filename} | sim={avg_sim:.3f} | offset={offset} | {match_status} | non-silent frames: {m}")
                         if avg_sim > best_similarity:
                             best_similarity = avg_sim
                             best_match = (ref_ts, ref_st, avg_sim, offset)
                             best_offset = offset
                             best_station = ref_st
                             best_ref_filename = ref_filename
+                        # Track best score per station
+                        if ref_st not in best_scores or avg_sim > best_scores[ref_st][0]:
+                            best_scores[ref_st] = (avg_sim, offset)
                         if avg_sim >= self.MATCH_THRESHOLD:
-                            match_msg = f"MATCH FOUND: AppFingerprint {app_fp_filename} (ts={app_fp_timestamp}) best matches Ref ts={ref_ts} (station={ref_st}) with similarity {avg_sim:.4f} at offset {offset} using {num_non_silent} non-silent frames"
+                            match_msg = f"MATCH FOUND: AppFingerprint {app_fp_filename} (ts={app_fp_timestamp}) best matches Ref ts={ref_ts} (station={ref_st}) with similarity {avg_sim:.4f} at offset {offset} using {m} non-silent frames"
                             logger.info(match_msg)
                             if debug_logger:
                                 debug_logger(match_msg)
@@ -486,6 +510,25 @@ class FingerprintMatcher:
                         logger.error(f"ERROR during comparison: {e}\n{traceback.format_exc()}")
                         if debug_logger:
                             debug_logger(f"ERROR during comparison: {e}\n{traceback.format_exc()}")
+                print_mfcc_stats(f"{ref_st} (ts={ref_ts})", ref_mfcc)
+            # Print/log best similarity scores for Smile FM and KFM
+            for st in ["Smile FM", "KFM"]:
+                if st in best_scores:
+                    sim, offset = best_scores[st]
+                    logger.info(f"BEST SIMILARITY | {st}: sim={sim:.4f} at offset={offset}")
+                    if debug_logger:
+                        debug_logger(f"BEST SIMILARITY | {st}: sim={sim:.4f} at offset={offset}")
+                else:
+                    logger.info(f"BEST SIMILARITY | {st}: No valid match found.")
+                    if debug_logger:
+                        debug_logger(f"BEST SIMILARITY | {st}: No valid match found.")
+            # Print/log per-MFCC means and stds for references
+            for st, (mean, std) in ref_mfcc_stats.items():
+                logger.info(f"{st} MFCC means: {mean}")
+                logger.info(f"{st} MFCC stds: {std}")
+                if debug_logger:
+                    debug_logger(f"{st} MFCC means: {mean}")
+                    debug_logger(f"{st} MFCC stds: {std}")
             summary = format_summary_log(
                 app_fp_filename, app_fp_timestamp,
                 best_match, best_similarity, best_station, best_offset
@@ -600,6 +643,16 @@ def open_log_in_vscode():
     except Exception as e:
         print(f"Could not open log in VS Code: {e}")
         print(f"Please open {LOG_FILE_PATH} manually in your preferred text editor")
+
+def print_mfcc_stats(label, mfccs):
+    if mfccs.shape[0] == 0:
+        print(f"{label}: No non-silent frames for MFCC stats.")
+        return
+    for i in range(mfccs.shape[1]):
+        col = mfccs[:, i]
+        mean = np.mean(col)
+        std = np.std(col)
+        print(f"{label} MFCC {i+1}: mean = {mean:.6f}, std = {std:.6f}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Radiolytics Fingerprint Matcher CLI")
